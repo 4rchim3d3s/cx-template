@@ -1,0 +1,107 @@
+/***************************************
+ * Author:
+ * Date:
+ * Version:
+***************************************/
+package buttonHandler
+
+/***************************************
+ * Import CX modules.
+***************************************/
+
+import "gl"
+import "os"
+
+/***************************************
+ * Import custom modules.
+***************************************/
+import "main"
+import "screenHandler"
+
+/***************************************
+ * Declaration of structs.
+***************************************/
+
+type Button struct {
+	name str
+	x f32
+	y f32
+	width i32
+	height i32
+	active bool
+	active_texture i32
+	inactive_texture i32
+}
+
+/***************************************
+ * Functions
+***************************************/
+
+/* Function     : newButton
+   Input        : Identifies the type of button (_name str)
+                : Original horizontal position relative to the parent screen (_x f32)
+                : Original vertical position relative to the parent screen (_y f32)
+                : Width in pixels (_width i32)
+                : Height in pixels (_height i32)
+                : Identifies if the button is currently selected (_active bool)
+   Output       : A button (button Button)
+   Description  : Constructor for the Button struct.
+*/
+func newButton(_name str, _x f32, _y f32, _width i32, _height i32, _active bool) (button Button) {
+	var _active_texture i32
+	var _inactive_texture i32
+	_active_texture, _inactive_texture = loadButtonTextures(_name)
+  
+	button := Button{
+	  name: _name,
+	  x: _x,
+	  y: _y,
+	  width: _width,
+	  height: _height,
+	  active: _active,
+	  active_texture: _active_texture,
+	  inactive_texture: _inactive_texture}
+}
+
+/* Function     : loadButtonTextures
+   Input        : Identifier for the type of button (button_name) str)
+   Output       : The button's active texture (active_texture i32)
+                : The button's inactive texture (inactive_texture i32)
+   Description  : Loads the button's textures.
+*/
+func loadButtonTextures(button_name str) (active_texture i32, inactive_texture i32) {
+	var wd str
+	wd = os.GetWorkingDirectory()
+	
+	active_texture = gl.NewTexture(sprintf("%s%s%s%s", wd, "textures/buttons/", button_name, "-button-active.png"))
+	inactive_texture = gl.NewTexture(sprintf("%s%s%s%s", wd, "textures/buttons/", button_name, "-button-inactive.png"))
+}
+	
+/*  Function     : renderButton
+	Input        : The button to render (button Button)
+	 			 : The button's parent screen (screen Screen)
+ 	Description  : Renders a button.
+*/
+func renderButton(button Button, screen screenHandler.Screen) () { 
+	gl.LoadIdentity()
+		
+	if button.active {
+		gl.BindTexture(gl.TEXTURE_2D, button.active_texture)
+	} else {
+		gl.BindTexture(gl.TEXTURE_2D, button.inactive_texture)
+	}
+		
+	gl.Translatef(button.x, button.y, 0.0)
+	gl.Scalef(screenHandler.scale(button.width, screen.width), screenHandler.scale(button.height, screen.height), 0.0) 
+		
+	gl.Begin(gl.QUADS)
+	gl.TexCoord2d(0.0D, 0.0D);
+	gl.Vertex3f(-1.0, 1.0, 0.0);
+	gl.TexCoord2d(1.0D, 0.0D);
+	gl.Vertex3f(1.0, 1.0, 0.0);
+	gl.TexCoord2d(1.0D, 1.0D);
+	gl.Vertex3f(1.0, -1.0, 0.0);
+	gl.TexCoord2d(0.0D, 1.0D);
+	gl.Vertex3f(-1.0, -1.0, 0.0);
+	gl.End();
+}

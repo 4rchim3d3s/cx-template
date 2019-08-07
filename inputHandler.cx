@@ -1,0 +1,222 @@
+/***************************************
+ * Author:
+ * Date:
+ * Version:
+***************************************/
+package inputHandler
+/***************************************
+ * Import CX modules.
+***************************************/
+
+import "glfw"
+
+/***************************************
+ * Import custom modules.
+***************************************/
+import "main"
+import "screenHandler"
+
+/***************************************
+ * Setting Variables
+***************************************/
+
+//--> variables for the mouse cursor 
+var mouse_x f64
+var mouse_y f64
+
+/***************************************
+ * Declaration struct
+***************************************/
+
+/***************************************
+ * Functions
+***************************************/
+
+/* Function     : init
+   Input        : Identifier for the window (window str)
+                : Identifier for the screen (screen str)
+   Description  : Sets the Callbacks for the mouse and keyboard depending on the input
+				: Note: you have to name the callback funcs depending on the screen they are used for
+				: 		e.g.: 'func SCREEN_MAIN' is the keyboard-callback for SCREEN_MAIN
+				:			  'func SCREEN_MAIN_mouseButtons' is the mouse-callback for SCREEN_MAIN
+*/
+func init(window str, screen str){
+	glfw.SetMouseButtonCallback(window, str.concat(screen, "_mouseButtons"))
+	glfw.SetKeyCallback(window, screen)
+}
+
+/* Function     : SCREEN_MAIN
+   Input        : Identifier for the window (window str)
+				: The used key (key i32)
+				: Platform-specific scancode (scancode i32)
+				: The action of the key (action  i32)
+				: Modifier bit (mods i32)
+   Description  : Keyboard-Callback for SCREEN_MAIN - Makes actions depending on the key that was pressed inside window
+*/
+func SCREEN_MAIN(window str, key i32, scancode i32, action i32, mods i32) {
+
+	if bool.and(i32.eq(key, 262), i32.eq(action, 1)) {
+		str.print("RIGHT")
+	}
+	if bool.and(i32.eq(key, 263), i32.eq(action, 1)) {
+		str.print("LEFT")
+	}
+	if bool.and(i32.eq(key, 264), i32.eq(action, 1)) {
+		str.print("DOWN")
+	}
+	if bool.and(i32.eq(key, 265), i32.eq(action, 1)) {
+		str.print("UP")
+	}
+	if bool.and(i32.eq(key, 256), i32.eq(action, 1)) {
+		str.print("ESCAPE")
+		main.EXIT_FLAG = true	//Set EXIT_FLAG to close main.WINDOW_NAME
+	}
+	if bool.and(i32.eq(key, 257), i32.eq(action, 1)) {
+		str.print("ENTER")
+	}
+}
+
+/* Function     : SCREEN_MAIN_mouseButtons
+   Input        : Identifier for the window (window str)
+				: The used key (key i32)
+				: Platform-specific scancode (scancode i32)
+				: The action of the key (action  i32)
+				: Modifier bit (mods i32)
+   Description  : MouseButton-Callback for SCREEN_MAIN - Makes actions depending on the button over whom the left Mouse-Button was released
+*/
+func SCREEN_MAIN_mouseButtons(window str, key i32, action i32, mods i32) () {
+	
+	if leftMouseButtonReleased("PLAY", key, action) {
+		screenHandler.setScreen(screenHandler.SCREEN_GAME)
+	}
+	if leftMouseButtonReleased("SETTINGS", key, action){
+		screenHandler.setScreen(screenHandler.SCREEN_SETTINGS)
+	}
+	if leftMouseButtonReleased("EXIT", key, action){
+		str.print("MOUSE -> EXIT")
+		main.EXIT_FLAG = true	//Set EXIT_FLAG to close main.WINDOW_NAME
+	}
+}
+
+/* Function     : SCREEN_GAME
+   Input        : Identifier for the window (window str)
+				: The used key (key i32)
+				: Platform-specific scancode (scancode i32)
+				: The action of the key (action  i32)
+				: Modifier bit (mods i32)
+   Description  : Keyboard-Callback for SCREEN_GAME - Makes actions depending on the key that was pressed inside window
+*/
+func SCREEN_GAME(window str, key i32, scancode i32, action i32, mods i32) {
+
+	if bool.and(i32.eq(key, 262), i32.eq(action, 1)) {
+		str.print("RIGHT")
+	}
+	if bool.and(i32.eq(key, 263), i32.eq(action, 1)) {
+		str.print("LEFT")
+	}
+	if bool.and(i32.eq(key, 264), i32.eq(action, 1)) {
+		str.print("DOWN")
+	}
+	if bool.and(i32.eq(key, 265), i32.eq(action, 1)) {
+		str.print("UP")
+	}
+	if bool.and(i32.eq(key, 256), i32.eq(action, 1)) {
+		str.print("ESCAPE")
+		screenHandler.setScreen(screenHandler.SCREEN_MAIN)
+	}
+	if bool.and(i32.eq(key, 257), i32.eq(action, 1)) {
+		str.print("ENTER")
+	}
+}
+
+/* Function     : SCREEN_GAME_mouseButtons
+   Input        : Identifier for the window (window str)
+				: The used key (key i32)
+				: Platform-specific scancode (scancode i32)
+				: The action of the key (action  i32)
+				: Modifier bit (mods i32)
+   Description  : MouseButton-Callback for SCREEN_GAME - Makes actions depending on the button over whom the left Mouse-Button was released
+*/
+func SCREEN_GAME_mouseButtons(window str, key i32, action i32, mods i32) () {
+	if leftMouseButtonReleased("BACK", key, action) {
+		screenHandler.setScreen(screenHandler.SCREEN_MAIN)
+	}
+}
+
+/* Function     : SCREEN_SETTINGS
+   Input        : Identifier for the window (window str)
+				: The used key (key i32)
+				: Platform-specific scancode (scancode i32)
+				: The action of the key (action  i32)
+				: Modifier bit (mods i32)
+   Description  : Keyboard-Callback for SCREEN_SETTINGS - Makes actions depending on the key that was pressed inside window
+*/
+func SCREEN_SETTINGS(window str, key i32, scancode i32, action i32, mods i32) {
+
+	if bool.and(i32.eq(key, 262), i32.eq(action, 1)) {
+		str.print("RIGHT")
+	}
+	if bool.and(i32.eq(key, 263), i32.eq(action, 1)) {
+		str.print("LEFT")
+	}
+	if bool.and(i32.eq(key, 264), i32.eq(action, 1)) {
+		str.print("DOWN")
+	}
+	if bool.and(i32.eq(key, 265), i32.eq(action, 1)) {
+		str.print("UP")
+	}
+	if bool.and(i32.eq(key, 256), i32.eq(action, 1)) {
+		str.print("ESCAPE")
+		screenHandler.setScreen(screenHandler.SCREEN_MAIN)
+	}
+	if bool.and(i32.eq(key, 257), i32.eq(action, 1)) {
+		str.print("ENTER")
+	}
+}
+
+/* Function     : SCREEN_SETTINGS_mouseButtons
+   Input        : Identifier for the window (window str)
+				: The used key (key i32)
+				: Platform-specific scancode (scancode i32)
+				: The action of the key (action  i32)
+				: Modifier bit (mods i32)
+   Description  : MouseButton-Callback for SCREEN_SETTINGS - Makes actions depending on the button over whom the left Mouse-Button was released
+*/
+func SCREEN_SETTINGS_mouseButtons(window str, key i32, action i32, mods i32) () {
+	
+	if leftMouseButtonReleased("BACK", key, action) {
+		screenHandler.setScreen(screenHandler.SCREEN_MAIN)
+	}
+
+}
+/* Function     : updateMousePosition
+   Desctription : updates the global variables of the mouse cursor
+*/
+func updateMousePosition(){
+	mouse_x, mouse_y = glfw.GetCursorPos(main.WINDOW_MAIN)
+}
+
+/* Function     : leftMouseButtonReleased
+   Input        : Identifier for the type of button (button_name) str)
+                : The used key (key i32)
+                : The action of the key (action  i32)
+   Output       : bool if the left mousebutton was released above the button button_name (released bool)
+   Description  : checks if the active button_name is the same where the left mouse button was released
+*/
+func leftMouseButtonReleased(buttonName str, key i32,action i32)(released bool){
+	released = false
+	if bool.and(bool.and(i32.eq(key, 0), i32.eq(action, 0)), str.eq(buttonName,screenHandler.getActiveButton(screenHandler.current_screen))) {
+		released = true
+	}
+}
+
+/***************************************
+ * Main
+***************************************/
+
+/* Function     : main
+   Description  : calls updateMousePosition() to update the cursor position
+*/
+func main(){
+	updateMousePosition()
+}

@@ -1,0 +1,248 @@
+/***************************************
+ * Author:
+ * Date:
+ * Version:
+***************************************/
+package screenHandler
+
+/***************************************
+ * Import CX modules.
+***************************************/
+
+import "gl"
+import "os"
+
+/***************************************
+ * Import custom modules.
+***************************************/
+import "main"
+import "inputHandler"
+import "buttonHandler"
+
+/***************************************
+ * Declaration struct
+***************************************/
+type Button struct { // FIXME --> delete when bug #385 fixed
+	name str
+	x f32
+	y f32
+	width i32
+	height i32
+	active bool
+	active_texture i32
+	inactive_texture i32
+}					// <-- 
+
+type Screen struct {
+	name str
+	width i32
+	height i32
+	has_background bool
+	background i32
+	button_count i32      				// FIXME remove once len(array<struct>) is implemented
+	//buttons []buttonHandler.Button 	//-> FIX when slice working
+	buttons [20]Button					// see above (delete this line then)
+  }
+
+/***************************************
+ * Variables
+***************************************/
+
+//--> make the screen size the same as the window size
+var SCREEN_WIDTH i32 = main.WINDOW_WIDTH	//Screen-Width pixles
+var SCREEN_HEIGHT i32 = main.WINDOW_HEIGHT	//Screen-Height pixles
+
+//--> Here we declare all our variables. For each screen we will have, we make a variable
+var SCREEN_MAIN str = "SCREEN_MAIN"
+var SCREEN_ACCOUNT str = "SCREEN_ACCOUNT"
+var SCREEN_GAME str = "SCREEN_GAME"
+var SCREEN_SETTINGS str = "SCREEN_SETTINGS"
+
+//--> This is the variable of the current screen. We will change everything depending the actual screen by using this variabl
+var current_screen Screen
+
+/***************************************
+ * Functions
+***************************************/
+
+/* Function     : newScreen
+   Input        : Identifies the name of screen (_name str)
+                : Width in pixels (_width i32)
+                : Height in pixels (_height i32)
+   Output       : A screen (Screen)
+   Description  : Constructor for the Screen struct.
+*/
+func newScreen(_name str, _width i32, _height i32) (screen Screen) {
+	var _has_background bool
+	var _background i32
+	_has_background, _background = loadScreenBackground(_name) // FIXME implement this
+	
+	screen := Screen{
+	  name: _name,
+	  width: _width,
+	  height: _height,
+	  has_background: _has_background,
+	  background: _background,
+	  button_count: 0}
+}
+
+/* Function     : newScreen
+   Input        : Identifies the screen to set (screen str)
+   Description  : Function to change the screen and add all objects like buttons to the new screen 
+				: e.g.: When we want main screen we pass the variable SCREEN_MAIN
+*/
+func setScreen(screen str) {
+	var new_screen Screen 		// screen-variable where we store our new screen for the setup
+	str.print(screen)			// print out what screen we want to set now
+
+	if str.eq(screen, SCREEN_MAIN) {
+		new_screen = newScreen(screen, SCREEN_WIDTH, SCREEN_HEIGHT)
+		new_screen = addButtonToScreen(buttonHandler.newButton("PLAY", 0.0, 0.0, 360, 130, false), new_screen)
+		new_screen = addButtonToScreen(buttonHandler.newButton("SETTINGS", 0.0, -0.3, 360, 130, false), new_screen)
+		new_screen = addButtonToScreen(buttonHandler.newButton("EXIT", 0.0, -0.6, 360, 130, false), new_screen)
+		inputHandler.init(main.WINDOW_MAIN, screen) //initialize the input-callbacks for this screen
+	}
+
+	if str.eq(screen, SCREEN_GAME) {
+		new_screen = newScreen(screen, SCREEN_WIDTH, SCREEN_HEIGHT)
+		new_screen = addButtonToScreen(buttonHandler.newButton("BACK", 0.0, -0.8, 270, 100, false), new_screen)
+		inputHandler.init(main.WINDOW_MAIN, screen) //initialize the input-callbacks for this screen
+	}
+
+	if str.eq(screen, SCREEN_SETTINGS) {
+		new_screen = newScreen(screen, SCREEN_WIDTH, SCREEN_HEIGHT)
+		new_screen = addButtonToScreen(buttonHandler.newButton("BACK", 0.0, -0.8, 270, 100, false), new_screen)
+		inputHandler.init(main.WINDOW_MAIN, screen) //initialize the input-callbacks for this screen
+	}
+	current_screen = new_screen
+}
+
+/* Function     : loadScreenBackground
+   Input        : Identifier of the screen (screen_name str)
+   Output       : a boolean to check if texture is loaded(has_background bool)
+				: the background-texture (texture i32)
+   Description  : loads the background texture for the screen and puts it out
+*/
+func loadScreenBackground(screen_name str) (has_background bool, texture i32) {
+	var wd str
+	wd = os.GetWorkingDirectory()
+		
+	has_background = true
+	texture = gl.NewTexture(sprintf("%s%s%s%s", wd,"textures/backgrounds/", screen_name,"-background.jpg"))
+}
+
+/* Function     : addButtonToScreen
+   Input        : The Button to add (button buttonHandler.Button)
+                : The Screen where to add the button (screen Screen)
+   Output       : The Screen with the added button (screen Screen)
+   Description  : Adds a Button to the given Screen
+*/
+func addButtonToScreen(button buttonHandler.Button, screen Screen) (screen Screen) {
+	//screen.buttons = append(screen.buttons, i32.add(screen.button_count , 1)) // FIXME -> use slices when work
+	screen.buttons[screen.button_count] = button								// FIXME -> button_count to len(slice)
+	screen.button_count = i32.add(screen.button_count, 1)						// FIXME -> button_count to len(slice)
+}
+
+/* Function     : updateButtonsState
+   Input        : the cursors x-position (cursor_x i32)
+                : the cursors y-position (cursor_y i32)
+                : the screen with the buttons (screen Screen)
+   Output       : the screen with the updated buttons (screen Screen)
+   Description  : checks all buttons in the screen, if the cursor is inside on of them 
+				: and updates this buttons properties to active = true / the other ones active = false
+*/
+func updateButtonsState(cursor_x i32, cursor_y i32, screen Screen) (screen Screen) {
+	for i:=0; i<screen.button_count; i++ {									// FIXME -> button_count to len(slice)
+		screen.buttons[i].active = positionInsideButton(cursor_x, cursor_y, screen.buttons[i], screen)
+	}
+}  
+
+/* Function     : getActiveButton
+   Input        : the screen with the buttons (screen Screen)
+   Output       : the name of the button that is acitve (button_name str)
+   Description  : Constructor for the Button struct.
+*/
+func getActiveButton(screen Screen) (button_name str) {
+	button_name = "NONE" 													// FIXME add bool to return params
+	for i:=0; i<screen.button_count; i++ {									// FIXME -> button_count to len(slice)
+	  if screen.buttons[i].active {
+		button_name = screen.buttons[i].name
+	  }
+	}
+}
+
+/* Function     : positionInsideButton
+   Input        : the cursors x-position (x i32)
+                : the cursors y-position (y i32)
+                : the button that should be checked (button buttonHandler.Button)
+                : the screen that contains the button (screen Screen)
+   Output       : boolean if cursor is inside or not (inside bool)
+   Description  : checks if the position x and y are inside the given button on the given screen
+*/
+func positionInsideButton(x i32, y i32, button buttonHandler.Button, screen Screen) (inside bool) {
+	inside = false
+	if i32.gteq(x, i32.sub(relative2absoluteX(button.x, screen.width), i32.div(button.width, 2))) {
+	  if i32.lteq(x, i32.add(relative2absoluteX(button.x, screen.width), i32.div(button.width, 2))) {
+		if i32.gteq(y, i32.sub(relative2absoluteY(button.y, screen.height), i32.div(button.height, 2))) {
+			if i32.lteq(y, i32.add(relative2absoluteY(button.y, screen.height), i32.div(button.height, 2))) {
+				inside = true  // FIXME I won't allow this shit tier code...
+			}
+		}
+	  }
+	}
+}
+
+/*************************************
+ * Declaration of rendering functions.
+**************************************/
+
+/* Function     : renderScreen
+   Input        : the screen to render (screen Screen)
+   Description  : renders the screen and all it's objects
+*/
+func renderScreen(screen Screen) () {
+	if screen.has_background {
+	  gl.LoadIdentity()
+	  gl.BindTexture(gl.TEXTURE_2D, screen.background)
+	  gl.Scalef(1.0, 1.0, 0.0)
+	  gl.Begin(gl.QUADS)
+	  gl.TexCoord2d(0.0D, 0.0D)
+	  gl.Vertex3f(-1.0, 1.0, 0.0)
+	  gl.TexCoord2d(1.0D, 0.0D)
+	  gl.Vertex3f(1.0, 1.0, 0.0)
+	  gl.TexCoord2d(1.0D, 1.0D)
+	  gl.Vertex3f(1.0, -1.0, 0.0)
+	  gl.TexCoord2d(0.0D, 1.0D)
+	  gl.Vertex3f(-1.0, -1.0, 0.0)
+	  gl.End()
+	}
+
+	for i:= 0; i < screen.button_count; i++ {								// FIXME -> button_count to len(slice)
+		buttonHandler.renderButton(screen.buttons[i], screen)			
+	}
+}
+ 
+func scale(value i32, max i32) (scaled f32) {
+	scaled = f32.div(i32.f32(value), i32.f32(max))
+}
+
+func relative2absoluteX(relative_position f32, max_px i32) (absolute_position i32) {
+  absolute_position = f32.i32(f32.add(f32.div(i32.f32(max_px), 2.0), f32.mul(relative_position, f32.div(i32.f32(max_px), 2.0))))
+}
+
+func relative2absoluteY(relative_position f32, max_px i32) (absolute_position i32) {
+	absolute_position = f32.i32(f32.sub(f32.div(i32.f32(max_px), 2.0), f32.mul(relative_position, f32.div(i32.f32(max_px), 2.0))))
+}
+
+/***************************************
+ * Main
+***************************************/
+
+/* Function     : main
+   Description  : 1. updates all Buttons of the current_screen
+				: 2. renders current_screen
+*/
+func main(){
+	current_screen = updateButtonsState(f64.i32(inputHandler.mouse_x), f64.i32(inputHandler.mouse_y), current_screen)
+	renderScreen(current_screen)
+}

@@ -1,0 +1,102 @@
+/***************************************
+ * Author:
+ * Date:
+ * Version: 
+***************************************/
+package main
+
+/***************************************
+ * Import CX modules.
+***************************************/
+
+import "gl"
+import "glfw"
+
+/***************************************
+ * Import custom modules.
+***************************************/
+import "inputHandler"
+import "screenHandler"
+import "buttonHandler"
+
+/***************************************
+ * Setting Variables
+***************************************/
+
+var WINDOW_WIDTH i32 = 1920					//Window-With   pixles
+var WINDOW_HEIGHT i32 = 1000				//Window-Height pixles
+var WINDOW_CAPTION str = "WindowCaption"	//The Window-Caption
+var WINDOW_MAIN str = "window_main"			//The Name of the window to call functions on it
+
+var EXIT_FLAG bool = false					//A Flag to check if the program should be closed
+
+/***************************************
+ * Declaration struct
+***************************************/
+
+/***************************************
+ * Functions
+***************************************/
+
+/* Function     : initOpenGL
+   Output       : the rogram object generated (program i32)
+   Description  : initializes the gl library and the gl program
+*/
+func initOpenGL() (program i32) {
+	gl.Init()
+	gl.Enable(gl.BLEND)
+	gl.BlendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA)
+
+	program = gl.CreateProgram()
+
+	gl.LinkProgram(program)
+}
+
+/* Function     : initGlfw
+   Input        : the name of the window to generate (window str)
+   Description  : initializes the glfw library and sets up the window creation settings. then creates a window and activates it
+*/
+func initGlfw(window str) {
+	glfw.Init()
+	glfw.WindowHint(glfw.Resizable, glfw.False)
+	glfw.WindowHint(glfw.ContextVersionMajor, 2)
+	glfw.WindowHint(glfw.ContextVersionMinor, 1)
+
+	glfw.CreateWindow(window, WINDOW_WIDTH, WINDOW_HEIGHT, WINDOW_CAPTION)
+	glfw.MakeContextCurrent(window)
+}
+
+/***************************************
+ * Main
+***************************************/
+
+/* Function     : main
+   Description  : 1. inits the libraries
+				: 2. sets first screen
+				: 3. checks if a ShouldClose or Exit-Flag event was made
+				: 4. main loop: 1. reset buffers
+								2. check inputs and handle screens
+								3. swap window buffers
+*/
+func main() {
+	initGlfw(WINDOW_MAIN)
+	var program i32
+	program = initOpenGL()
+
+	screenHandler.setScreen(screenHandler.SCREEN_MAIN)
+	for bool.not(glfw.ShouldClose(WINDOW_MAIN)) && bool.not(EXIT_FLAG) {
+		gl.ClearColor(0.0, 0.0, 0.0, 1.0)
+		gl.Clear(gl.COLOR_BUFFER_BIT)
+
+		gl.LoadIdentity()
+		gl.Enable(gl.TEXTURE_2D)
+		gl.Translatef(0.0, 0.0, 0.0)
+
+		inputHandler.main()
+		screenHandler.main()
+			
+		glfw.PollEvents()
+		glfw.SwapBuffers(WINDOW_MAIN)
+	}
+
+}
