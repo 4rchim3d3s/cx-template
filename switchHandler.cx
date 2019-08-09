@@ -89,6 +89,11 @@ func loadSwitchTextures(switch_type str) (active_texture i32, checked_texture i3
 	unchecked_texture = gl.NewTexture(sprintf("%s%s%s%s", wd, "textures/switches/", switch_type, "-switch-unchecked.png"))
 }
 
+/*  Function     : check
+	Input        : The switch to check (switchy Switch)
+	Output       : The checked switch (switchy Switch)
+ 	Description  : tries to check the switch, if it already is checked return a false and the given switch
+*/
 func check(switchy Switch)(success bool,switchy Switch){
 	if bool.eq(switchy.checked, true){
 		success = false
@@ -98,6 +103,11 @@ func check(switchy Switch)(success bool,switchy Switch){
 	}
 }
 
+/*  Function     : uncheck
+	Input        : The switch to uncheck (switchy Switch)
+	Output       : The unchecked switch (switchy Switch)
+ 	Description  : tries to uncheck the switch, if it already is unchecked return a false and the given switch
+*/
 func uncheck(switchy Switch)(success bool,switchy Switch){
 	if bool.eq(switchy.checked, false){
 		success = false
@@ -107,6 +117,11 @@ func uncheck(switchy Switch)(success bool,switchy Switch){
 	}
 }
 
+/*  Function     : toggle
+	Input        : The switch to toggle (switchy Switch)
+	Output       : The toggled switch (switchy Switch)
+ 	Description  : toggles and returns the given switch
+*/
 func toggle(switchy Switch)(switchy Switch){
 	if bool.eq(switchy.checked, true){
 		switchy.checked = false
@@ -117,9 +132,9 @@ func toggle(switchy Switch)(switchy Switch){
 
 
 /*  Function     : renderSwitch
-	Input        : The Switch to render (Switch Switch)
-	 			 : The Switch's parent screen (screen Screen)
- 	Description  : Renders a Switch.
+	Input        : The switch to render (switchy Switch)
+	 			 : The switch's parent screen (screen Screen)
+ 	Description  : Renders a switch.
 */
 func renderSwitch(switchy Switch, screen screenHandler.Screen) () { //FIXME change screenHandler package, when slices work
 	gl.LoadIdentity()

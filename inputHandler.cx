@@ -188,7 +188,7 @@ func SCREEN_SETTINGS_mouseButtons(window str, key i32, action i32, mods i32) () 
 		screenHandler.setScreen(screenHandler.SCREEN_MAIN)
 	}
 
-	if leftMouseButtonReleased("TEST", key, action){
+	if leftMouseButtonReleased("TEST", key, action){ // TODO -> iterate through all switches of screen and then call function -> less code lines
 		screenHandler.toggleSwitch("TEST")
 	}
 

@@ -399,7 +399,8 @@ func relative2absoluteY(relative_position f32, max_px i32) (absolute_position i3
 /* Function     : main
    Description  : 1. updates all buttons of the current_screen
 				: 2. updates all switches of the current_screen
-				: 2. renders current_screen
+				: 3. updates the textboxes (for showing variables etc.)
+				: 4. renders current_screen
 */
 func main(){
 	current_screen = updateButtonsState(f64.i32(inputHandler.mouse_x), f64.i32(inputHandler.mouse_y), current_screen)
