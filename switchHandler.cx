@@ -1,0 +1,152 @@
+/***************************************
+ * Author:
+ * Date:
+ * Version:
+***************************************/
+package switchHandler
+
+/***************************************
+ * Import CX modules.
+***************************************/
+
+import "gl"
+import "glfw"
+import "gltext"
+import "os"
+
+/***************************************
+ * Import custom modules.
+***************************************/
+import "main"
+import "screenHandler"
+import "inputHandler"
+
+/***************************************
+ * Declaration of structs.
+***************************************/
+
+type Switch struct {
+	switchtype str
+	id str
+	checked bool
+	x f32
+	y f32
+	width i32
+	height i32
+	active bool
+	active_texture i32
+	checked_texture i32
+	unchecked_texture i32
+}
+
+/***************************************
+ * Functions
+***************************************/
+
+/* Function     : newSwitch
+   Input        : Identifies the type of Switch (_type str)
+                : Original horizontal position relative to the parent screen (_x f32)
+                : Original vertical position relative to the parent screen (_y f32)
+                : Width in pixels (_width i32)
+                : Height in pixels (_height i32)
+				: Identifies if the Switch is currently selected (_active bool)
+				: Identifies if the Switch is checked (_checked bool)
+   Output       : A Switch (switchy Switch)
+   Desctription : Constructor for the Switch struct.
+*/
+func newSwitch(_id str, _type str, _x f32, _y f32, _width i32, _height i32, _active bool, _checked bool) (switchy Switch) { //FIXME change screenHAndler package when slices work
+	var _active_texture i32
+	var _checked_texture i32
+	var _unchecked_texture i32
+	_active_texture, _checked_texture, _unchecked_texture = loadSwitchTextures(_type)
+  
+	switchy := Switch{
+	  switchtype: _type,
+	  id: _id,
+	  checked: _checked,
+	  x: _x,
+	  y: _y,
+	  width: _width,
+	  height: _height,
+	  active: _active,
+	  active_texture: _active_texture,
+	  checked_texture: _checked_texture,
+	  unchecked_texture: _unchecked_texture}
+}
+
+/* Function     : loadSwitchTextures
+   Input        : Identifier for the type of Switch (switch_type) str)
+   Output       : The Switch's active texture (checked_texture i32)
+                : The Switch's inactive texture (unchecked_texture i32)
+   Desctription : Loads the Switch's textures.
+*/
+func loadSwitchTextures(switch_type str) (active_texture i32, checked_texture i32, unchecked_texture i32) {
+	var wd str
+	wd = os.GetWorkingDirectory()
+	
+	active_texture = gl.NewTexture(sprintf("%s%s%s%s", wd, "textures/switches/", switch_type, "-switch-active.png"))
+	checked_texture = gl.NewTexture(sprintf("%s%s%s%s", wd, "textures/switches/", switch_type, "-switch-checked.png"))
+	unchecked_texture = gl.NewTexture(sprintf("%s%s%s%s", wd, "textures/switches/", switch_type, "-switch-unchecked.png"))
+}
+
+func check(switchy Switch)(success bool,switchy Switch){
+	if bool.eq(switchy.checked, true){
+		success = false
+	}else{
+		switchy.checked = true
+		success = true
+	}
+}
+
+func uncheck(switchy Switch)(success bool,switchy Switch){
+	if bool.eq(switchy.checked, false){
+		success = false
+	}else{
+		switchy.checked = false
+		success = true
+	}
+}
+
+func toggle(switchy Switch)(switchy Switch){
+	if bool.eq(switchy.checked, true){
+		switchy.checked = false
+	  }else{
+		switchy.checked = true
+	}
+}
+
+
+/*  Function     : renderSwitch
+	Input        : The Switch to render (Switch Switch)
+	 			 : The Switch's parent screen (screen Screen)
+ 	Description  : Renders a Switch.
+*/
+func renderSwitch(switchy Switch, screen screenHandler.Screen) () { //FIXME change screenHandler package, when slices work
+	gl.LoadIdentity()
+		
+	if bool.eq(switchy.checked, true) {
+		gl.BindTexture(gl.TEXTURE_2D, switchy.checked_texture)
+		if bool.eq(switchy.active, true){
+			gl.BindTexture(gl.TEXTURE_2D, switchy.active_texture)
+		}
+	} else {
+		gl.BindTexture(gl.TEXTURE_2D, switchy.unchecked_texture)
+		if bool.eq(switchy.active, true){
+			gl.BindTexture(gl.TEXTURE_2D, switchy.active_texture)
+		}
+	}
+		
+	gl.Translatef(switchy.x, switchy.y, 0.0)
+	gl.Scalef(screenHandler.scale(switchy.width, screen.width), screenHandler.scale(switchy.height, screen.height), 0.0) //FIXME change screenHAndler package, when slices work
+		
+	gl.Begin(gl.QUADS)
+	gl.TexCoord2d(0.0D, 0.0D);
+	gl.Vertex3f(-1.0, 1.0, 0.0);
+	gl.TexCoord2d(1.0D, 0.0D);
+	gl.Vertex3f(1.0, 1.0, 0.0);
+	gl.TexCoord2d(1.0D, 1.0D);
+	gl.Vertex3f(1.0, -1.0, 0.0);
+	gl.TexCoord2d(0.0D, 1.0D);
+	gl.Vertex3f(-1.0, -1.0, 0.0);
+	gl.End();
+}

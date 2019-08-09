@@ -188,6 +188,10 @@ func SCREEN_SETTINGS_mouseButtons(window str, key i32, action i32, mods i32) () 
 		screenHandler.setScreen(screenHandler.SCREEN_MAIN)
 	}
 
+	if leftMouseButtonReleased("TEST", key, action){
+		screenHandler.toggleSwitch("TEST")
+	}
+
 }
 /* Function     : updateMousePosition
    Desctription : updates the global variables of the mouse cursor
@@ -197,15 +201,18 @@ func updateMousePosition(){
 }
 
 /* Function     : leftMouseButtonReleased
-   Input        : Identifier for the type of button (button_name) str)
+   Input        : Identifier for the type of object (object_id str)
                 : The used key (key i32)
                 : The action of the key (action  i32)
-   Output       : bool if the left mousebutton was released above the button button_name (released bool)
-   Description  : checks if the active button_name is the same where the left mouse button was released
+   Output       : bool if the left mousebutton was released above the object (released bool)
+   Description  : checks if the active object_id is the same where the left mouse button was released
 */
-func leftMouseButtonReleased(buttonName str, key i32,action i32)(released bool){
+func leftMouseButtonReleased(object_id str, key i32,action i32)(released bool){
 	released = false
-	if bool.and(bool.and(i32.eq(key, 0), i32.eq(action, 0)), str.eq(buttonName,screenHandler.getActiveButton(screenHandler.current_screen))) {
+	if bool.and(bool.and(i32.eq(key, 0), i32.eq(action, 0)), str.eq(object_id,screenHandler.getActiveButton(screenHandler.current_screen))) {
+		released = true
+	}
+	if bool.and(bool.and(i32.eq(key, 0), i32.eq(action, 0)), str.eq(object_id,screenHandler.getActiveSwitch(screenHandler.current_screen))) {
 		released = true
 	}
 }

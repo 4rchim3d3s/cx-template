@@ -19,10 +19,25 @@ import "main"
 import "inputHandler"
 import "buttonHandler"
 import "textboxHandler"
+import "switchHandler"
 
 /***************************************
  * Declaration struct
 ***************************************/
+type Switch struct { // FIXME --> delete when bug #385 fixed
+	switchtype str
+	id str
+	checked bool
+	x f32
+	y f32
+	width i32
+	height i32
+	active bool
+	active_texture i32
+	checked_texture i32
+	unchecked_texture i32
+}					  // <--
+
 type Textbox struct { // FIXME --> delete when bug #385 fixed
 	id str
 	x f32
@@ -54,7 +69,10 @@ type Screen struct {
 	buttons [20]Button					// see above (delete this line then)
 	//textboxes []textboxHandler.Textbox//-> FIX when slice working
 	textbox_count i32     				// FIXME remove once len(array<struct>) is implemented
-	textboxes [40]Textbox 				// FIXME remove limit once slices are working
+	textboxes [20]Textbox 				// FIXME remove limit once slices are working
+	//switches []switchHandler.Switch	//-> Fix when slice working
+	switches_count i32					// FIXME remove once len(array<struct>) is implemented
+	switches [20]Switch					// FIXME remove limit once slices are working
   }
 
 /***************************************
@@ -131,6 +149,7 @@ func setScreen(screen str) {
 	if str.eq(screen, SCREEN_SETTINGS) {
 		new_screen = newScreen(screen, SCREEN_WIDTH, SCREEN_HEIGHT)
 		new_screen = addButtonToScreen(buttonHandler.newButton("BACK", 0.0, -0.8, 270, 100, false), new_screen)
+		new_screen = addSwitchToScreen(switchHandler.newSwitch("TEST", "CROSS", 0.0, 0.0, 40, 40, false, false), new_screen)
 		inputHandler.init(main.WINDOW_MAIN, screen) //initialize the input-callbacks for this screen
 	}
 	current_screen = new_screen
@@ -248,6 +267,81 @@ func updateTextboxes()(){
 		//updateTextboxText("TIMER",f32.str(timer))
 	}
 }
+
+/*************************************
+ * Switch-Functions
+**************************************/
+
+/* Function     : addSwitchToScreen
+   Input        : The switch to add (switchy switchHandler.Switch)
+                : The screen where to add the switch (screen Screen)
+   Output       : The screen with the added switch (screen Screen)
+   Description  : Adds a textbox to the given screen
+*/
+func addSwitchToScreen(switchy switchHandler.Switch, screen Screen) (screen Screen) {
+	//screen.buttons = append(screen.buttons, i32.add(screen.button_count , 1)) //FIXME -> use slices when work
+	screen.switches[screen.switches_count] = switchy							//FIXME -> switches_count to len(slice)
+	screen.switches_count = i32.add(screen.switches_count, 1)					//FIXME -> switches_count to len(slice)
+}
+
+/* Function     : updateSwitchState
+   Input        : the x-position of the mousecursor (cursor_x i32)
+				: the y-position of the mousecursor (cursor_y i32)
+                : the screen where to check the switches (screen Screen)
+   Description  : updates the switch, where the mouse is on the actual screen
+*/
+func updateSwitchState(cursor_x i32, cursor_y i32, screen Screen) (screen Screen) {
+	for i:=0; i<screen.switches_count; i++ {
+		screen.switches[i].active = positionInsideSwitch(cursor_x, cursor_y, screen.switches[i], screen)
+	}
+} 
+
+/* Function     : getActiveSwitch
+   Input        : the screen where to check (screen Screen)
+   Output   	: the identifier for the switch (switch_id str)
+   Description  : returns the switch, that is active on the screen
+*/
+func getActiveSwitch(screen Screen) (switch_id str) {
+	switch_id = "NONE" 															// FIXME add bool to return params
+	for i:=0; i<screen.switches_count; i++ {
+	  if screen.switches[i].active {
+		switch_id = screen.switches[i].id
+	  }
+	}
+}
+
+/* Function     : toggleActiveSwitch
+   Input        : the identifier for the switch to toggle (switch_id str)
+   Description  : toggles the given Switch
+*/
+func toggleSwitch(switch_id str)(){
+	for i:=0; i<current_screen.switches_count; i++ {
+		if str.eq(current_screen.switches[i].id, switch_id) {
+			current_screen.switches[i] = switchHandler.toggle(current_screen.switches[i])
+		}
+	}
+}
+
+/* Function     : positionInsideSwitch
+   Input        : the cursors x-position (x i32)
+                : the cursors y-position (y i32)
+                : the switch that should be checked (switchy switchHandler.Switch)
+                : the screen that contains the switch (screen Screen)
+   Output       : boolean if cursor is inside or not (inside bool)
+   Description  : returns if the cursor is in the given switch
+*/
+func positionInsideSwitch(x i32, y i32, switchy switchHandler.Switch, screen Screen) (inside bool) {
+	inside = false
+	if i32.gteq(x, i32.sub(relative2absoluteX(switchy.x, screen.width), i32.div(switchy.width, 2))) {
+	  if i32.lteq(x, i32.add(relative2absoluteX(switchy.x, screen.width), i32.div(switchy.width, 2))) {
+			if i32.gteq(y, i32.sub(relative2absoluteY(switchy.y, screen.height), i32.div(switchy.height, 2))) {
+				if i32.lteq(y, i32.add(relative2absoluteY(switchy.y, screen.height), i32.div(switchy.height, 2))) {
+					inside = true  // FIXME I won't allow this shit tier code...
+				}
+			}
+	  }
+	}
+}
 /*************************************
  * Declaration of rendering functions.
 **************************************/
@@ -280,6 +374,10 @@ func renderScreen(screen Screen) () {
 	for z:=0; z<screen.textbox_count; z++ {									// FIXME -> textbox_count to len(slice)
 		textboxHandler.renderTextbox(screen.textboxes[z], screen)
 	}
+
+	for i:= 0; i < screen.switches_count; i++ {								// FIXME -> switches_count to len(slice)
+		switchHandler.renderSwitch(screen.switches[i], screen)
+	}
 }
  
 func scale(value i32, max i32) (scaled f32) {
@@ -299,11 +397,13 @@ func relative2absoluteY(relative_position f32, max_px i32) (absolute_position i3
 ***************************************/
 
 /* Function     : main
-   Description  : 1. updates all Buttons of the current_screen
+   Description  : 1. updates all buttons of the current_screen
+				: 2. updates all switches of the current_screen
 				: 2. renders current_screen
 */
 func main(){
 	current_screen = updateButtonsState(f64.i32(inputHandler.mouse_x), f64.i32(inputHandler.mouse_y), current_screen)
+	current_screen = updateSwitchState(f64.i32(inputHandler.mouse_x), f64.i32(inputHandler.mouse_y), current_screen)
 	updateTextboxes()
 	renderScreen(current_screen)
 }
