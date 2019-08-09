@@ -5,4 +5,139 @@
 ***************************************/
 package textboxHandler
 
-//test
+/***************************************
+ * Import CX modules.
+***************************************/
+
+import "gl"
+import "gltext"
+import "os"
+
+/***************************************
+ * Import custom modules.
+***************************************/
+import "screenHandler"
+
+/***************************************
+ * Declaration of structs.
+***************************************/
+
+type Textbox struct {
+	id str
+	x f32
+	y f32
+	text str
+	font str
+	color str
+}
+/***************************************
+ * Variables
+***************************************/
+
+//--> Default Font File and Settings
+var TEXTBOX_FONT_FILE str = "Skycoin-Sans-otf/skycoin_light.ttf"
+var TEXTBOX_FONT_SETTING str = "SkycoinSans36-Light"
+
+//--> Variables for color-settings of text
+var COLOR [4]f32
+var COLOR_NOTHING [4]f32 = [4]f32{1.0,1.0,1.0,1.0}
+var COLOR_BLUE [4]f32 = [4]f32{0.0,0.0,1.0,1.0}
+var COLOR_RED [4]f32 = [4]f32{1.0,0.0,0.0,1.0}
+var COLOR_GREEN [4]f32 = [4]f32{0.0,1.0,0.0,1.0}
+var COLOR_BLACK [4]f32 = [4]f32{0.0,0.0,0.0,1.0}
+
+/***************************************
+ * Functions
+***************************************/
+
+/* Function     : newTextbox
+   Input        : Original horizontal position relative to the parent screen (_x f32)
+                : Original vertical position relative to the parent screen (_y f32)
+                : The actual text (_text str)
+                : The text's font (_font str)
+   Output       : A Textbox (textbox Textbox)
+   Desctription : Constructor for the Textbox struct.
+*/
+func newTextbox(_id str, _x f32, _y f32, _text str, _font str, _color str) (textbox Textbox) {
+	textbox := Textbox{
+	id: _id,
+	x: _x,
+	y: _y,
+	text: _text,
+	font: _font,
+	color: _color}
+		
+	initFont(TEXTBOX_FONT_FILE,_font)
+}
+
+/* Function     : getTextboxText
+   Input        : The identifier for the textbox (textbox_id str)
+                : the Screen where the textbox is (screen screenHandler.Screen)
+   Output       : The text of the textbox (text str)
+   Desctription : returns the text of a given textbox
+*/
+func getTextboxText(textbox_id str, screen screenHandler.Screen) (text str) {
+	for i:=0; i<screen.textbox_count; i++ {
+		if str.eq(screen.textboxes[i].id, textbox_id) {
+			text = screen.textboxes[i].text
+		}
+	}
+}
+
+/* Function     : setTextboxText
+   Input        : The identifier for the textbox (textbox_id str)
+				: The new text of the textbox (text str)
+                : the Screen where the textbox is (screen screenHandler.Screen)
+   Output       : The screen with the updated textbox text (screen screenHandler.Screen)
+   Desctription : updates the textbox-text of a given textbox
+*/
+func setTextboxText(textbox_id str, text str, screen screenHandler.Screen) (screen screenHandler.Screen) {
+	for i:=0; i<screen.textbox_count; i++ {
+	  if str.eq(screen.textboxes[i].id, textbox_id) {
+		screen.textboxes[i].text = text
+	  }
+	}
+}
+	
+/* Function    	 : renderTextbox
+	Input        : The textbox to render (textbox Textbox)
+				 : The textboxes' parent screen (screen Screen)
+	Desctription : Renders a textbox.
+  */
+func renderTextbox(textbox Textbox, screen screenHandler.Screen) () {
+		gl.LoadIdentity()
+
+		if str.eq(textbox.color,"blue"){
+			COLOR = COLOR_BLUE
+		}
+		if str.eq(textbox.color,"red"){
+			COLOR = COLOR_RED
+		}
+		if str.eq(textbox.color,"green"){
+			COLOR = COLOR_GREEN
+		}
+		if str.eq(textbox.color,"black"){
+			COLOR = COLOR_BLACK
+		}
+		
+		gl.Color4f(COLOR[0],COLOR[1],COLOR[2],COLOR[3])
+
+		var x f32
+		var y f32
+		x = i32.f32(screenHandler.relative2absoluteX(textbox.x, screen.width))
+		y = i32.f32(screenHandler.relative2absoluteY(textbox.y, screen.height))
+		gltext.Printf(textbox.font, x, y, textbox.text)
+
+		COLOR = COLOR_NOTHING
+		gl.Color4f(COLOR[0],COLOR[1],COLOR[2],COLOR[3])
+}
+
+func initFont(fontfile_link str, font_setting str) {
+	var wd str
+	wd = os.GetWorkingDirectory()
+	fontFile := str.concat(str.concat(wd, "fonts/"), fontfile_link)
+
+	os.Open(fontFile)
+	gltext.LoadTrueType(font_setting, fontFile, 36, 32, 127, gltext.LeftToRight)
+	os.Close(fontFile)
+}

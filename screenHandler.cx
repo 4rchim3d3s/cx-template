@@ -18,10 +18,20 @@ import "os"
 import "main"
 import "inputHandler"
 import "buttonHandler"
+import "textboxHandler"
 
 /***************************************
  * Declaration struct
 ***************************************/
+type Textbox struct { // FIXME --> delete when bug #385 fixed
+	id str
+	x f32
+	y f32
+	text str
+	font str
+	color str
+}					 // <--
+
 type Button struct { // FIXME --> delete when bug #385 fixed
 	name str
 	x f32
@@ -31,7 +41,7 @@ type Button struct { // FIXME --> delete when bug #385 fixed
 	active bool
 	active_texture i32
 	inactive_texture i32
-}					// <-- 
+}					 // <-- 
 
 type Screen struct {
 	name str
@@ -42,6 +52,9 @@ type Screen struct {
 	button_count i32      				// FIXME remove once len(array<struct>) is implemented
 	//buttons []buttonHandler.Button 	//-> FIX when slice working
 	buttons [20]Button					// see above (delete this line then)
+	//textboxes []textboxHandler.Textbox//-> FIX when slice working
+	textbox_count i32     				// FIXME remove once len(array<struct>) is implemented
+	textboxes [40]Textbox 				// FIXME remove limit once slices are working
   }
 
 /***************************************
@@ -83,8 +96,13 @@ func newScreen(_name str, _width i32, _height i32) (screen Screen) {
 	  height: _height,
 	  has_background: _has_background,
 	  background: _background,
-	  button_count: 0}
+	  button_count: 0,
+	  textbox_count: 0}
 }
+
+/*************************************
+ * Screens
+**************************************/
 
 /* Function     : newScreen
    Input        : Identifies the screen to set (screen str)
@@ -100,6 +118,7 @@ func setScreen(screen str) {
 		new_screen = addButtonToScreen(buttonHandler.newButton("PLAY", 0.0, 0.0, 360, 130, false), new_screen)
 		new_screen = addButtonToScreen(buttonHandler.newButton("SETTINGS", 0.0, -0.3, 360, 130, false), new_screen)
 		new_screen = addButtonToScreen(buttonHandler.newButton("EXIT", 0.0, -0.6, 360, 130, false), new_screen)
+		new_screen = addTextboxToScreen(textboxHandler.newTextbox("VERSION", 0.9 , 0.9, main.PROGRAM_VERSION, textboxHandler.TEXTBOX_FONT_SETTING,"black"), new_screen)
 		inputHandler.init(main.WINDOW_MAIN, screen) //initialize the input-callbacks for this screen
 	}
 
@@ -130,6 +149,10 @@ func loadScreenBackground(screen_name str) (has_background bool, texture i32) {
 	has_background = true
 	texture = gl.NewTexture(sprintf("%s%s%s%s", wd,"textures/backgrounds/", screen_name,"-background.jpg"))
 }
+
+/*************************************
+ * Button-Functions
+**************************************/
 
 /* Function     : addButtonToScreen
    Input        : The Button to add (button buttonHandler.Button)
@@ -193,6 +216,39 @@ func positionInsideButton(x i32, y i32, button buttonHandler.Button, screen Scre
 }
 
 /*************************************
+ * Textbox-Functions
+**************************************/
+
+/* Function     : addTextboxToScreen
+   Input        : The textbox to add (textbox textboxHandler.Textbox)
+                : The screen where to add the textbox (screen Screen)
+   Output       : The screen with the added textbox (screen Screen)
+   Description  : Adds a textbox to the given screen
+*/
+func addTextboxToScreen(textbox textboxHandler.Textbox, screen Screen) (screen Screen) {
+	//screen.textboxes = append(screen.textboxes, i32.add(screen.textbox_count , 1)) //FIXME -> use slices when work //len(slice)
+	screen.textboxes[screen.textbox_count] = textbox								 //FIXME -> len(slice)
+	screen.textbox_count = i32.add(screen.textbox_count, 1)							 //FIXME -> len(slice)
+}
+
+/* Function     : updateTextboxText
+   Input        : the identifier of the textbox (textbox_id str)
+                : the new text to add (text str)
+   Description  : updates the text of a given textbox
+*/
+func updateTextboxText(textbox_id str, text str)(){
+	current_screen = textboxHandler.setTextboxText(textbox_id, text, current_screen)
+}
+
+/* Function     : updateTextboxes
+   Description  : A routine to update all the textboxes, depending on what screen is the current_screen
+*/
+func updateTextboxes()(){
+	if str.eq(current_screen.name,SCREEN_GAME){
+		//updateTextboxText("TIMER",f32.str(timer))
+	}
+}
+/*************************************
  * Declaration of rendering functions.
 **************************************/
 
@@ -220,6 +276,10 @@ func renderScreen(screen Screen) () {
 	for i:= 0; i < screen.button_count; i++ {								// FIXME -> button_count to len(slice)
 		buttonHandler.renderButton(screen.buttons[i], screen)			
 	}
+
+	for z:=0; z<screen.textbox_count; z++ {									// FIXME -> textbox_count to len(slice)
+		textboxHandler.renderTextbox(screen.textboxes[z], screen)
+	}
 }
  
 func scale(value i32, max i32) (scaled f32) {
@@ -244,5 +304,6 @@ func relative2absoluteY(relative_position f32, max_px i32) (absolute_position i3
 */
 func main(){
 	current_screen = updateButtonsState(f64.i32(inputHandler.mouse_x), f64.i32(inputHandler.mouse_y), current_screen)
+	updateTextboxes()
 	renderScreen(current_screen)
 }
