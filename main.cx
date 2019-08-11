@@ -99,7 +99,8 @@ func main() {
 
 		inputHandler.main()
 		screenHandler.main()
-			
+		inputHandler.resetStates()	
+		
 		glfw.PollEvents()
 		glfw.SwapBuffers(WINDOW_MAIN)
 	}

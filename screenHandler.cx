@@ -20,10 +20,31 @@ import "inputHandler"
 import "buttonHandler"
 import "textboxHandler"
 import "switchHandler"
+import "sliderHandler"
 
 /***************************************
  * Declaration struct
 ***************************************/
+type Slider struct { // FIXME --> delete when bug #385 fixed
+	slidertype str
+	id str
+	value i32
+	value_max i32
+	slider_x f32
+	slider_y f32
+	slider_width i32
+	slider_height i32
+	frame_x f32
+	frame_y f32
+	frame_width i32
+	frame_height i32
+	active bool
+	clicked bool
+	slider_texture_active i32
+	slider_texture_inactive i32
+	sliderframe_texture i32
+}					 // <--
+
 type Switch struct { // FIXME --> delete when bug #385 fixed
 	switchtype str
 	id str
@@ -73,6 +94,9 @@ type Screen struct {
 	//switches []switchHandler.Switch	//-> Fix when slice working
 	switches_count i32					// FIXME remove once len(array<struct>) is implemented
 	switches [20]Switch					// FIXME remove limit once slices are working
+	//sliders []sliderHandler.Slider	//-> Fix when slice working
+	sliders_count i32					// FIXME remove once len(array<struct>) is implemented
+	sliders [20]Slider					// FIXME remove limit once slices are working
   }
 
 /***************************************
@@ -115,7 +139,9 @@ func newScreen(_name str, _width i32, _height i32) (screen Screen) {
 	  has_background: _has_background,
 	  background: _background,
 	  button_count: 0,
-	  textbox_count: 0}
+	  textbox_count: 0,
+	  switches_count: 0,
+	  sliders_count: 0}
 }
 
 /*************************************
@@ -149,7 +175,10 @@ func setScreen(screen str) {
 	if str.eq(screen, SCREEN_SETTINGS) {
 		new_screen = newScreen(screen, SCREEN_WIDTH, SCREEN_HEIGHT)
 		new_screen = addButtonToScreen(buttonHandler.newButton("BACK", 0.0, -0.8, 270, 100, false), new_screen)
-		new_screen = addSwitchToScreen(switchHandler.newSwitch("TEST", "CROSS", 0.0, 0.0, 40, 40, false, false), new_screen)
+		new_screen = addSwitchToScreen(switchHandler.newSwitch("TESTSWITCH", "CROSS", 0.0, 0.0, 40, 40, false, false), new_screen)
+		new_screen = addSwitchToScreen(switchHandler.newSwitch("TESTSWITCH2", "CROSS", -0.1, -0.1, 20, 60, false, false), new_screen)
+		new_screen = addSliderToScreen(sliderHandler.newSlider("TESTSLIDER", "CROSS", 50, 100, 0.2, 0.2, 200, 40), new_screen)
+		new_screen = addSliderToScreen(sliderHandler.newSlider("TESTSLIDER2", "CROSS", 20, 100, 0.3, 0.3, 400, 40), new_screen)
 		inputHandler.init(main.WINDOW_MAIN, screen) //initialize the input-callbacks for this screen
 	}
 	current_screen = new_screen
@@ -195,7 +224,7 @@ func addButtonToScreen(button buttonHandler.Button, screen Screen) (screen Scree
 */
 func updateButtonsState(cursor_x i32, cursor_y i32, screen Screen) (screen Screen) {
 	for i:=0; i<screen.button_count; i++ {									// FIXME -> button_count to len(slice)
-		screen.buttons[i].active = positionInsideButton(cursor_x, cursor_y, screen.buttons[i], screen)
+		screen.buttons[i].active = positionInsideButton(cursor_x, cursor_y, screen.buttons[i], screen)			//TODO -> inside switchHandler? not direct variable setting
 	}
 }  
 
@@ -342,6 +371,95 @@ func positionInsideSwitch(x i32, y i32, switchy switchHandler.Switch, screen Scr
 	  }
 	}
 }
+
+
+/*************************************
+ * Slider-Functions
+**************************************/
+
+/* Function     : addSliderToScreen
+   Input        : The Slider to add (slider sliderHandler.Slider)
+                : The screen where to add the Slider (screen Screen)
+   Output       : The screen with the added Slider (screen Screen)
+   Description  : Adds a textbox to the given screen
+*/
+func addSliderToScreen(slider sliderHandler.Slider, screen Screen) (screen Screen) {
+	//screen.buttons = append(screen.buttons, i32.add(screen.button_count , 1)) //FIXME -> use slices when work
+	screen.sliders[screen.sliders_count] = slider								//FIXME -> sliders_count to len(slice)
+	screen.sliders_count = i32.add(screen.sliders_count, 1)						//FIXME -> sliders_count to len(slice)
+}
+
+/* Function     : updateSliderState
+   Input        : the x-position of the mousecursor (cursor_x i32)
+				: the y-position of the mousecursor (cursor_y i32)
+                : the screen where to check the sliders (screen Screen)
+   Description  : updates the Sliders State, when the mouse is above the slider it gets activated, if the mouse is clicked above then clicked = true
+*/
+func updateSliderState(cursor_x i32, cursor_y i32, screen Screen) (screen Screen) {
+	for i:=0; i<screen.sliders_count; i++ {										//FIXME -> sliders_count to len(slice)
+		screen.sliders[i].active = positionInsideSlider(cursor_x, cursor_y, screen.sliders[i], screen)
+		if bool.eq(screen.sliders[i].active, true){
+			if bool.eq(inputHandler.mouse_left_click, true){
+				screen.sliders[i].clicked = true
+			}
+		}
+		if bool.eq(inputHandler.mouse_left_release, true){
+			screen.sliders[i].clicked = false
+		}
+	}
+}
+
+
+/* Function     : updateSliderPosition
+   Input        : the identifier for the slider (slider_id str)
+				: the xposition of the mouse (mouse_x f64)
+   Description  : updates the sliders position on the same position of the mouse
+*/
+func updateSliderPosition(slider sliderHandler.Slider, mouse_x f64){
+	for i:=0; i<current_screen.sliders_count; i++ {								//FIXME -> sliders_count to len(slice)
+		if str.eq(current_screen.sliders[i].id, slider.id){
+			current_screen.sliders[i].slider_x = absolute2relativeX(f64.i32(mouse_x), current_screen.width)
+			current_screen.sliders[i] = sliderHandler.limitPosition(current_screen.sliders[i])
+			current_screen.sliders[i]= sliderHandler.setValueByPosition(current_screen.sliders[i])
+		}
+	}
+}
+
+/* Function     : getActiveSlider
+   Input        : the screen where to check (screen Screen)
+   Output   	: the identifier for the Slider (slider_id str)
+   Description  : returns the Slider, that is active on the screen
+*/
+func getActiveSlider(screen Screen) (slider_id str) {
+	slider_id = "NONE" 															//FIXME add bool to return params
+	for i:=0; i<screen.sliders_count; i++ {										//FIXME -> sliders_count to len(slice)
+	  if screen.sliders[i].active {
+		slider_id = screen.sliders[i].id
+	  }
+	}
+}
+
+/* Function     : positionInsideSlider
+   Input        : the cursors x-position (x i32)
+                : the cursors y-position (y i32)
+                : the slider that should be checked (slider sliderHandler.Slider)
+                : the screen that contains the slider (screen Screen)
+   Output       : boolean if cursor is inside or not (inside bool)
+   Description  : returns if the cursor is in the given slider
+*/
+func positionInsideSlider(x i32, y i32, slider sliderHandler.Slider, screen Screen) (inside bool) {
+	inside = false
+	if i32.gteq(x, i32.sub(relative2absoluteX(slider.slider_x, screen.width), i32.div(slider.slider_width, 2))) {
+	  if i32.lteq(x, i32.add(relative2absoluteX(slider.slider_x, screen.width), i32.div(slider.slider_width, 2))) {
+			if i32.gteq(y, i32.sub(relative2absoluteY(slider.slider_y, screen.height), i32.div(slider.slider_height, 2))) {
+				if i32.lteq(y, i32.add(relative2absoluteY(slider.slider_y, screen.height), i32.div(slider.slider_height, 2))) {
+					inside = true  // FIXME I won't allow this shit tier code...
+				}
+			}
+	  }
+	}
+}
+
 /*************************************
  * Declaration of rendering functions.
 **************************************/
@@ -371,17 +489,25 @@ func renderScreen(screen Screen) () {
 		buttonHandler.renderButton(screen.buttons[i], screen)			
 	}
 
-	for z:=0; z<screen.textbox_count; z++ {									// FIXME -> textbox_count to len(slice)
-		textboxHandler.renderTextbox(screen.textboxes[z], screen)
+	for i:=0; i<screen.textbox_count; i++ {									// FIXME -> textbox_count to len(slice)
+		textboxHandler.renderTextbox(screen.textboxes[i], screen)
 	}
 
 	for i:= 0; i < screen.switches_count; i++ {								// FIXME -> switches_count to len(slice)
 		switchHandler.renderSwitch(screen.switches[i], screen)
 	}
+
+	for i:= 0; i < screen.sliders_count; i++ {								// FIXME -> sliders_count to len(slice)
+		sliderHandler.renderSlider(screen.sliders[i], screen)
+	}
 }
- 
+
+/***************************************
+ * Scale-Functions
+***************************************/ 
+
 func scale(value i32, max i32) (scaled f32) {
-	scaled = f32.div(i32.f32(value), i32.f32(max))
+  scaled = f32.div(i32.f32(value), i32.f32(max))
 }
 
 func relative2absoluteX(relative_position f32, max_px i32) (absolute_position i32) {
@@ -392,6 +518,9 @@ func relative2absoluteY(relative_position f32, max_px i32) (absolute_position i3
 	absolute_position = f32.i32(f32.sub(f32.div(i32.f32(max_px), 2.0), f32.mul(relative_position, f32.div(i32.f32(max_px), 2.0))))
 }
 
+func absolute2relativeX(absolute_position i32, max_px i32)(relative_position f32){
+	relative_position = f32.sub(f32.mul(2.0, f32.div(i32.f32(absolute_position), i32.f32(max_px))),1.0)
+}
 /***************************************
  * Main
 ***************************************/
@@ -399,12 +528,14 @@ func relative2absoluteY(relative_position f32, max_px i32) (absolute_position i3
 /* Function     : main
    Description  : 1. updates all buttons of the current_screen
 				: 2. updates all switches of the current_screen
-				: 3. updates the textboxes (for showing variables etc.)
-				: 4. renders current_screen
+				: 3. updates all sliders of the current_screen
+				: 4. updates the textboxes (for showing variables etc.)
+				: 5. renders current_screen
 */
 func main(){
 	current_screen = updateButtonsState(f64.i32(inputHandler.mouse_x), f64.i32(inputHandler.mouse_y), current_screen)
 	current_screen = updateSwitchState(f64.i32(inputHandler.mouse_x), f64.i32(inputHandler.mouse_y), current_screen)
+	current_screen = updateSliderState(f64.i32(inputHandler.mouse_x), f64.i32(inputHandler.mouse_y), current_screen)
 	updateTextboxes()
 	renderScreen(current_screen)
 }

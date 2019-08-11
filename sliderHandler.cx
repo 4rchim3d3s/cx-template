@@ -1,0 +1,246 @@
+/***************************************
+ * Author:
+ * Date:
+ * Version:
+***************************************/
+package sliderHandler
+
+/***************************************
+ * Import CX modules.
+***************************************/
+
+import "gl"
+import "gltext"
+import "os"
+
+/***************************************
+ * Import custom modules.
+***************************************/
+import "main"
+import "screenHandler"
+import "inputHandler"
+
+/***************************************
+ * Declaration of structs.
+***************************************/
+
+type Slider struct {
+	slidertype str
+	id str
+	value i32
+	value_max i32
+	slider_x f32
+	slider_y f32
+	slider_width i32
+	slider_height i32
+	frame_x f32
+	frame_y f32
+	frame_width i32
+	frame_height i32
+	active bool
+	clicked bool
+	slider_texture_active i32
+	slider_texture_inactive i32
+	sliderframe_texture i32
+}
+
+/***************************************
+ * Functions
+***************************************/
+
+/* Function     : newSlider
+   Input        : Identifies the type of Slider (_type str)
+				: The actual value of the slider (_value i32)
+                : Original horizontal position relative to the parent screen (_x f32)
+                : Original vertical position relative to the parent screen (_y f32)
+                : Width in pixels (_width i32)
+                : Height in pixels (_height i32)
+				: Identifies if the Slider is currently selected (_active bool)
+   Output       : A slider (slider Slider)
+   Desctription : Constructor for the Slider struct.
+*/
+func newSlider(_id str, _type str, _value i32,_value_max i32, _x f32, _y f32, _width i32, _height i32) (slider Slider) { //FIXME change screenHAndler package when slices work
+	var _slider_texture_active i32
+	var _slider_texture_inactive i32
+	var _sliderframe_texture i32
+	_slider_texture_active, _slider_texture_inactive, _sliderframe_texture = loadSliderTextures(_type)
+	
+	var _slider_width i32
+	_slider_width = i32.div(_width, 5)
+
+	slider := Slider{
+	  slidertype: _type,
+	  id: _id,
+	  value: _value,
+	  value_max: _value_max,
+	  slider_x: getPositionByValue(_value,_value_max,_slider_width,_x,_width, screenHandler.current_screen.width), //--> TODO function to get position out of position of frame, width and value
+	  slider_y: _y,
+	  slider_width: _slider_width,
+	  slider_height: _height,
+	  frame_x: _x,
+	  frame_y: _y,
+	  frame_width: _width,
+	  frame_height: _height,
+	  active: false,
+	  clicked: false,
+	  slider_texture_active: _slider_texture_active,
+	  slider_texture_inactive: _slider_texture_inactive,
+	  sliderframe_texture: _sliderframe_texture}
+}
+
+/* Function     : loadSliderTextures
+   Input        : Identifier for the type of slider (slider_type) str)
+   Output       : The slider's active texture (slider_texture_active i32)
+				: The slider's inactive texture (slider_texture_inactive i32)#
+				: The sliderframe texture (sliderframe_texture i32)
+   Desctription : Loads the sliders's textures.
+*/
+func loadSliderTextures(slider_type str) (slider_texture_active i32, slider_texture_inactive i32, sliderframe_texture i32) {
+	var wd str
+	wd = os.GetWorkingDirectory()
+	
+	slider_texture_active = gl.NewTexture(sprintf("%s%s%s%s", wd, "textures/sliders/", slider_type, "-slider-active.png"))
+	slider_texture_inactive = gl.NewTexture(sprintf("%s%s%s%s", wd, "textures/sliders/", slider_type, "-slider-inactive.png"))
+	sliderframe_texture = gl.NewTexture(sprintf("%s%s%s%s", wd, "textures/sliders/", slider_type, "-sliderframe.png"))
+}
+
+
+/*  Function     : renderSlider
+	Input        : The slider to render (slider Slider)
+	 			 : The slider's parent screen (screen Screen)
+ 	Description  : Renders a slider
+*/
+func renderSlider(slider Slider, screen screenHandler.Screen) () {
+	//Sliderframe
+	gl.LoadIdentity()
+	
+	gl.BindTexture(gl.TEXTURE_2D, slider.sliderframe_texture)
+		
+	gl.Translatef(slider.frame_x, slider.frame_y, 0.0)
+	gl.Scalef(screenHandler.scale(slider.frame_width, screen.width), screenHandler.scale(slider.frame_height, screen.height), 0.0)
+		
+	gl.Begin(gl.QUADS)
+	gl.TexCoord2d(0.0D, 0.0D);
+	gl.Vertex3f(-1.0, 1.0, 0.0);
+	gl.TexCoord2d(1.0D, 0.0D);
+	gl.Vertex3f(1.0, 1.0, 0.0);
+	gl.TexCoord2d(1.0D, 1.0D);
+	gl.Vertex3f(1.0, -1.0, 0.0);
+	gl.TexCoord2d(0.0D, 1.0D);
+	gl.Vertex3f(-1.0, -1.0, 0.0);
+	gl.End();
+
+	//Slider
+	gl.LoadIdentity()
+	
+	if bool.eq(slider.active,true){
+		gl.BindTexture(gl.TEXTURE_2D, slider.slider_texture_active)
+	}else{
+		gl.BindTexture(gl.TEXTURE_2D, slider.slider_texture_inactive)
+	}
+		
+	gl.Translatef(slider.slider_x, slider.slider_y, 0.0)
+	gl.Scalef(screenHandler.scale(slider.slider_width, screen.width), screenHandler.scale(slider.slider_height, screen.height), 0.0)
+		
+	gl.Begin(gl.QUADS)
+	gl.TexCoord2d(0.0D, 0.0D);
+	gl.Vertex3f(-1.0, 1.0, 0.0);
+	gl.TexCoord2d(1.0D, 0.0D);
+	gl.Vertex3f(1.0, 1.0, 0.0);
+	gl.TexCoord2d(1.0D, 1.0D);
+	gl.Vertex3f(1.0, -1.0, 0.0);
+	gl.TexCoord2d(0.0D, 1.0D);
+	gl.Vertex3f(-1.0, -1.0, 0.0);
+	gl.End();
+}
+
+/* Function     : limitValue
+   Input        : the Slider to limit (slider Slider)
+   Output   	: the limited Slider (slider Slider)
+   Description  : limits the maximum and minimum Value of the slider
+*/
+func limitValue(slider Slider)(slider Slider){
+	if i32.gt(slider.value, slider.value_max){
+		slider.value = slider.value_max
+	}
+	if i32.lt(slider.value, 0){
+		slider.value = 0
+	}
+}
+
+/* Function     : limitPosition
+   Input        : the Slider to limit (slider Slider)
+   Output   	: the limited Slider (slider Slider)
+   Description  : limits the maximum and minimum x-position of the slider
+*/
+func limitPosition(slider Slider)(slider Slider){
+	var frame_x_abs i32
+	var frame_x_max i32
+	var frame_x_min i32
+	var slider_x_abs i32
+	var slider_x_half_width i32
+	
+	frame_x_abs = screenHandler.relative2absoluteX(slider.frame_x, screenHandler.current_screen.width)
+	frame_x_min = i32.sub(frame_x_abs, i32.div(slider.frame_width,2))
+	frame_x_max = i32.add(frame_x_abs, i32.div(slider.frame_width,2))
+	slider_x_abs = screenHandler.relative2absoluteX(slider.slider_x, screenHandler.current_screen.width)
+	slider_x_half_width = i32.div(slider.slider_width,2)
+
+	if i32.gt(slider_x_abs, i32.sub(frame_x_max,slider_x_half_width)){
+		slider.slider_x = screenHandler.absolute2relativeX(i32.sub(frame_x_max,slider_x_half_width), screenHandler.current_screen.width)
+	}
+
+	if i32.lt(slider_x_abs, i32.add(frame_x_min,slider_x_half_width)){
+		slider.slider_x = screenHandler.absolute2relativeX(i32.add(frame_x_min,slider_x_half_width), screenHandler.current_screen.width)
+	}
+}
+
+func setPositionByValue(slider Slider)(slider Slider){
+	slider.slider_x = getPositionByValue(slider.value, slider.value_max, slider.slider_width, slider.frame_x, slider.frame_width, screenHandler.current_screen.width)
+}
+
+func getPositionByValue(value i32, value_max i32,slider_width i32, frame_x f32, frame_width i32, screen_width i32)(position_x f32){
+	var frame_x_abs i32
+	var slider_x_abs i32
+	var slider_x_half_width i32
+	var frame_x_half_width i32
+	var min_x_abs i32
+	var max_x_abs i32
+	var percent f32
+
+	slider_x_abs = screenHandler.relative2absoluteX(position_x, screen_width)
+	frame_x_half_width = i32.div(frame_width, 2)
+	slider_x_half_width = i32.div(slider_width,2)
+	frame_x_abs = screenHandler.relative2absoluteX(frame_x, screen_width)
+
+	min_x_abs = i32.add(i32.sub(frame_x_abs, frame_x_half_width), slider_x_half_width)
+	max_x_abs = i32.sub(i32.add(frame_x_abs, frame_x_half_width), slider_x_half_width)
+	
+	percent = f32.div(i32.f32(value), i32.f32(value_max))
+
+	position_x = screenHandler.absolute2relativeX(i32.add(min_x_abs, f32.i32(f32.mul(percent,i32.f32(i32.sub(max_x_abs, min_x_abs))))), screen_width)
+}
+
+func setValueByPosition(slider Slider)(slider Slider){
+	slider.value = getValueByPosition(slider.slider_x, slider.slider_width, slider.value_max, slider.frame_x, slider.frame_width, screenHandler.current_screen.width)
+	i32.print(slider.value)
+}
+
+func getValueByPosition(position_x f32, slider_width i32, value_max i32, frame_x f32, frame_width i32, screen_width i32)(value i32){
+	var frame_x_abs i32
+	var slider_x_abs i32
+	var slider_x_half_width i32
+	var frame_x_half_width i32
+	var min_x_abs i32
+	var max_x_abs i32
+
+	slider_x_abs = screenHandler.relative2absoluteX(position_x, screen_width)
+	frame_x_half_width = i32.div(frame_width, 2)
+	slider_x_half_width = i32.div(slider_width,2)
+	frame_x_abs = screenHandler.relative2absoluteX(frame_x, screen_width)
+
+	min_x_abs = i32.add(i32.sub(frame_x_abs, frame_x_half_width), slider_x_half_width)
+	max_x_abs = i32.sub(i32.add(frame_x_abs, frame_x_half_width), slider_x_half_width)
+
+	value = f32.i32(f32.mul(f32.div(i32.f32(i32.sub(slider_x_abs, min_x_abs)), i32.f32(i32.sub(max_x_abs, min_x_abs))), i32.f32(value_max)))
+}

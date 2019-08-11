@@ -10,7 +10,6 @@ package switchHandler
 ***************************************/
 
 import "gl"
-import "glfw"
 import "gltext"
 import "os"
 
@@ -19,7 +18,6 @@ import "os"
 ***************************************/
 import "main"
 import "screenHandler"
-import "inputHandler"
 
 /***************************************
  * Declaration of structs.
@@ -54,7 +52,7 @@ type Switch struct {
    Output       : A Switch (switchy Switch)
    Desctription : Constructor for the Switch struct.
 */
-func newSwitch(_id str, _type str, _x f32, _y f32, _width i32, _height i32, _active bool, _checked bool) (switchy Switch) { //FIXME change screenHAndler package when slices work
+func newSwitch(_id str, _type str, _x f32, _y f32, _width i32, _height i32, _active bool, _checked bool) (switchy Switch) {
 	var _active_texture i32
 	var _checked_texture i32
 	var _unchecked_texture i32
@@ -76,8 +74,9 @@ func newSwitch(_id str, _type str, _x f32, _y f32, _width i32, _height i32, _act
 
 /* Function     : loadSwitchTextures
    Input        : Identifier for the type of Switch (switch_type) str)
-   Output       : The Switch's active texture (checked_texture i32)
-                : The Switch's inactive texture (unchecked_texture i32)
+   Output       : The Switch's active texture (active_texture i32)
+				: The Switch's checked texture (checked_texture i32)
+				: The Switch's unchecked texture (unchecked_texture i32)
    Desctription : Loads the Switch's textures.
 */
 func loadSwitchTextures(switch_type str) (active_texture i32, checked_texture i32, unchecked_texture i32) {
@@ -136,7 +135,7 @@ func toggle(switchy Switch)(switchy Switch){
 	 			 : The switch's parent screen (screen Screen)
  	Description  : Renders a switch.
 */
-func renderSwitch(switchy Switch, screen screenHandler.Screen) () { //FIXME change screenHandler package, when slices work
+func renderSwitch(switchy Switch, screen screenHandler.Screen) () { 
 	gl.LoadIdentity()
 		
 	if bool.eq(switchy.checked, true) {
@@ -152,7 +151,7 @@ func renderSwitch(switchy Switch, screen screenHandler.Screen) () { //FIXME chan
 	}
 		
 	gl.Translatef(switchy.x, switchy.y, 0.0)
-	gl.Scalef(screenHandler.scale(switchy.width, screen.width), screenHandler.scale(switchy.height, screen.height), 0.0) //FIXME change screenHAndler package, when slices work
+	gl.Scalef(screenHandler.scale(switchy.width, screen.width), screenHandler.scale(switchy.height, screen.height), 0.0)
 		
 	gl.Begin(gl.QUADS)
 	gl.TexCoord2d(0.0D, 0.0D);
