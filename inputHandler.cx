@@ -200,18 +200,11 @@ func SCREEN_SETTINGS(window str, key i32, scancode i32, action i32, mods i32) {
 func SCREEN_SETTINGS_mouseButtons(window str, key i32, action i32, mods i32) () {
 	
 	updateMouseButtons(key, action)
+	checkSwitches()
 	
 	if leftMouseButtonReleased("BACK", key, action) {
 		screenHandler.setScreen(screenHandler.SCREEN_MAIN)
 	}
-
-	if leftMouseButtonReleased("TESTSWITCH", key, action){ // TODO -> iterate through all switches of screen and then call function -> less code lines
-		screenHandler.toggleSwitch("TESTSWITCH")
-	}
-	if leftMouseButtonReleased("TESTSWITCH2", key, action){ // TODO -> iterate through all switches of screen and then call function -> less code lines
-		screenHandler.toggleSwitch("TESTSWITCH2")
-	}
-
 }
 
 func actions_with_durations(screen screenHandler.Screen){
@@ -305,6 +298,14 @@ func updateMouseButtons(key i32, action i32)(){
 	if bool.and(i32.eq(key, 1), i32.eq(action, 0)){
 		mouse_right_release = true
 		mouse_right_hold = false
+	}
+}
+
+func checkSwitches(){
+	for i:=0; i<screenHandler.current_screen.switches_count; i++ {	
+		if mouseAction(screenHandler.current_screen.switches[i].id, mouse_left_release){
+			screenHandler.toggleSwitch(screenHandler.current_screen.switches[i].id)
+		}
 	}
 }
 /***************************************

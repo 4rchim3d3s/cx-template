@@ -223,7 +223,6 @@ func getPositionByValue(value i32, value_max i32,slider_width i32, frame_x f32, 
 
 func setValueByPosition(slider Slider)(slider Slider){
 	slider.value = getValueByPosition(slider.slider_x, slider.slider_width, slider.value_max, slider.frame_x, slider.frame_width, screenHandler.current_screen.width)
-	i32.print(slider.value)
 }
 
 func getValueByPosition(position_x f32, slider_width i32, value_max i32, frame_x f32, frame_width i32, screen_width i32)(value i32){

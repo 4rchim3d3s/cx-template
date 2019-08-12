@@ -178,7 +178,9 @@ func setScreen(screen str) {
 		new_screen = addSwitchToScreen(switchHandler.newSwitch("TESTSWITCH", "CROSS", 0.0, 0.0, 40, 40, false, false), new_screen)
 		new_screen = addSwitchToScreen(switchHandler.newSwitch("TESTSWITCH2", "CROSS", -0.1, -0.1, 20, 60, false, false), new_screen)
 		new_screen = addSliderToScreen(sliderHandler.newSlider("TESTSLIDER", "CROSS", 50, 100, 0.2, 0.2, 200, 40), new_screen)
-		new_screen = addSliderToScreen(sliderHandler.newSlider("TESTSLIDER2", "CROSS", 20, 100, 0.3, 0.3, 400, 40), new_screen)
+		new_screen = addTextboxToScreen(textboxHandler.newTextbox("TESTSLIDER", 0.35 , 0.25, i32.str(new_screen.sliders[0].value), textboxHandler.TEXTBOX_FONT_SETTING,"black"), new_screen)
+		new_screen = addSliderToScreen(sliderHandler.newSlider("TESTSLIDER2", "CROSS", 20, 1000, 0.3, 0.3, 400, 40), new_screen)
+		new_screen = addTextboxToScreen(textboxHandler.newTextbox("TESTSLIDER2", 0.55 , 0.35, i32.str(new_screen.sliders[0].value), textboxHandler.TEXTBOX_FONT_SETTING,"black"), new_screen)
 		inputHandler.init(main.WINDOW_MAIN, screen) //initialize the input-callbacks for this screen
 	}
 	current_screen = new_screen
@@ -292,8 +294,9 @@ func updateTextboxText(textbox_id str, text str)(){
    Description  : A routine to update all the textboxes, depending on what screen is the current_screen
 */
 func updateTextboxes()(){
-	if str.eq(current_screen.name,SCREEN_GAME){
-		//updateTextboxText("TIMER",f32.str(timer))
+	if str.eq(current_screen.name,SCREEN_SETTINGS){
+		updateTextboxText("TESTSLIDER",i32.str(current_screen.sliders[0].value)) //TODO iterate through textboxes until id is found and give then value on this, not by direct accessing .value
+		updateTextboxText("TESTSLIDER2",i32.str(current_screen.sliders[1].value))
 	}
 }
 
