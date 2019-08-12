@@ -195,10 +195,25 @@ func limitPosition(slider Slider)(slider Slider){
 	}
 }
 
+/* Function     : setPositionByValue
+   Input        : the Slider to set its position (slider Slider)
+   Output   	: the positioned slider (slider Slider)
+   Description  : sets the position of the slider depending on his value
+*/
 func setPositionByValue(slider Slider)(slider Slider){
 	slider.slider_x = getPositionByValue(slider.value, slider.value_max, slider.slider_width, slider.frame_x, slider.frame_width, screenHandler.current_screen.width)
 }
 
+/* Function     : getPositionByValue
+   Input        : the value of the slider (value i32)
+				: the max value of the slider (value_max i32)
+				: the sliders width (slider_width i32)
+				: the frames relative x position (frame_x f32)
+				: the frames width (frame_width i32)
+				: the width of the screen (screen_width i32)
+   Output   	: the relative x_position of the slider to the current_screen size (position_x f32)
+   Description  : sets the position of the slider depending on his value
+*/
 func getPositionByValue(value i32, value_max i32,slider_width i32, frame_x f32, frame_width i32, screen_width i32)(position_x f32){
 	var frame_x_abs i32
 	var slider_x_abs i32
@@ -221,10 +236,25 @@ func getPositionByValue(value i32, value_max i32,slider_width i32, frame_x f32, 
 	position_x = screenHandler.absolute2relativeX(i32.add(min_x_abs, f32.i32(f32.mul(percent,i32.f32(i32.sub(max_x_abs, min_x_abs))))), screen_width)
 }
 
+/* Function     : setValueByPosition
+   Input        : the slider to set its value (slider Slider)
+   Output   	: the slider with the value (slider Slider)
+   Description  : sets the value of the slider depending on his position
+*/
 func setValueByPosition(slider Slider)(slider Slider){
 	slider.value = getValueByPosition(slider.slider_x, slider.slider_width, slider.value_max, slider.frame_x, slider.frame_width, screenHandler.current_screen.width)
 }
 
+/* Function     : getValueByPosition
+   Input        : the relative x_position of the slider to the current_screen size (position_x f32)
+				: the max value of the slider (value_max i32)
+				: the sliders width (slider_width i32)
+				: the frames relative x position (frame_x f32)
+				: the frames width (frame_width i32)
+				: the width of the screen (screen_width i32)
+   Output   	: the value of the slider (value i32)
+   Description  : sets the value of the slider depending on his x_position on the current screen
+*/
 func getValueByPosition(position_x f32, slider_width i32, value_max i32, frame_x f32, frame_width i32, screen_width i32)(value i32){
 	var frame_x_abs i32
 	var slider_x_abs i32

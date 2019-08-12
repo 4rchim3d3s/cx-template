@@ -47,15 +47,15 @@ var TESTSLIDER_FREE bool
                 : Identifier for the screen (screen str)
    Description  : Sets the Callbacks for the mouse and keyboard depending on the input
 				: Note: you have to name the callback funcs depending on the screen they are used for
-				: 		e.g.: 'func SCREEN_MAIN' is the keyboard-callback for SCREEN_MAIN
+				: 		e.g.: 'func SCREEN_MAIN_keyboardKeys' is the keyboard-callback for SCREEN_MAIN
 				:			  'func SCREEN_MAIN_mouseButtons' is the mouse-callback for SCREEN_MAIN
 */
 func init(window str, screen str){
 	glfw.SetMouseButtonCallback(window, str.concat(screen, "_mouseButtons"))
-	glfw.SetKeyCallback(window, screen)
+	glfw.SetKeyCallback(window, str.concat(screen, "_keyboardKeys"))
 }
 
-/* Function     : SCREEN_MAIN
+/* Function     : SCREEN_MAIN_keyboardKeys
    Input        : Identifier for the window (window str)
 				: The used key (key i32)
 				: Platform-specific scancode (scancode i32)
@@ -63,7 +63,7 @@ func init(window str, screen str){
 				: Modifier bit (mods i32)
    Description  : Keyboard-Callback for SCREEN_MAIN - Makes actions depending on the key that was pressed inside window
 */
-func SCREEN_MAIN(window str, key i32, scancode i32, action i32, mods i32) {
+func SCREEN_MAIN_keyboardKeys(window str, key i32, scancode i32, action i32, mods i32) {
 
 	if bool.and(i32.eq(key, 262), i32.eq(action, 1)) {
 		str.print("RIGHT")
@@ -98,19 +98,19 @@ func SCREEN_MAIN_mouseButtons(window str, key i32, action i32, mods i32) () {
 
 	updateMouseButtons(key, action)
 	
-	if leftMouseButtonReleased("PLAY", key, action) {
+	if mouseAction("PLAY", mouse_left_release){
 		screenHandler.setScreen(screenHandler.SCREEN_GAME)
 	}
-	if leftMouseButtonReleased("SETTINGS", key, action){
+	if mouseAction("SETTINGS", mouse_left_release){
 		screenHandler.setScreen(screenHandler.SCREEN_SETTINGS)
 	}
-	if leftMouseButtonReleased("EXIT", key, action){
+	if mouseAction("EXIT", mouse_left_release){
 		str.print("MOUSE -> EXIT")
 		main.EXIT_FLAG = true	//Set EXIT_FLAG to close main.WINDOW_NAME
 	}
 }
 
-/* Function     : SCREEN_GAME
+/* Function     : SCREEN_GAME_keyboardKeys
    Input        : Identifier for the window (window str)
 				: The used key (key i32)
 				: Platform-specific scancode (scancode i32)
@@ -118,7 +118,7 @@ func SCREEN_MAIN_mouseButtons(window str, key i32, action i32, mods i32) () {
 				: Modifier bit (mods i32)
    Description  : Keyboard-Callback for SCREEN_GAME - Makes actions depending on the key that was pressed inside window
 */
-func SCREEN_GAME(window str, key i32, scancode i32, action i32, mods i32) {
+func SCREEN_GAME_keyboardKeys(window str, key i32, scancode i32, action i32, mods i32) {
 
 	if bool.and(i32.eq(key, 262), i32.eq(action, 1)) {
 		str.print("RIGHT")
@@ -153,12 +153,12 @@ func SCREEN_GAME_mouseButtons(window str, key i32, action i32, mods i32) () {
 
 	updateMouseButtons(key, action)
 
-	if leftMouseButtonReleased("BACK", key, action) {
+	if mouseAction("BACK", mouse_left_release){
 		screenHandler.setScreen(screenHandler.SCREEN_MAIN)
 	}
 }
 
-/* Function     : SCREEN_SETTINGS
+/* Function     : SCREEN_SETTINGS_keyboardKeys
    Input        : Identifier for the window (window str)
 				: The used key (key i32)
 				: Platform-specific scancode (scancode i32)
@@ -166,7 +166,7 @@ func SCREEN_GAME_mouseButtons(window str, key i32, action i32, mods i32) () {
 				: Modifier bit (mods i32)
    Description  : Keyboard-Callback for SCREEN_SETTINGS - Makes actions depending on the key that was pressed inside window
 */
-func SCREEN_SETTINGS(window str, key i32, scancode i32, action i32, mods i32) {
+func SCREEN_SETTINGS_keyboardKeys(window str, key i32, scancode i32, action i32, mods i32) {
 
 	if bool.and(i32.eq(key, 262), i32.eq(action, 1)) {
 		str.print("RIGHT")
@@ -202,11 +202,15 @@ func SCREEN_SETTINGS_mouseButtons(window str, key i32, action i32, mods i32) () 
 	updateMouseButtons(key, action)
 	checkSwitches()
 	
-	if leftMouseButtonReleased("BACK", key, action) {
+	if mouseAction("BACK", mouse_left_release) {
 		screenHandler.setScreen(screenHandler.SCREEN_MAIN)
 	}
 }
 
+/* Function     : actions_with_durations
+   Input        : the screen object to check if an action, that lasts longer than the callback is made (screen screenHandler.Screen)
+   Description  : checks if an action is made on an object of the given screen and updates values on this  -> for mouse-button-holding-actions
+*/
 func actions_with_durations(screen screenHandler.Screen){
 	if str.eq(screen.name, screenHandler.SCREEN_SETTINGS){
 		for i:=0; i<screen.sliders_count; i++ {	
@@ -224,26 +228,11 @@ func updateMousePosition(){
 	mouse_x, mouse_y = glfw.GetCursorPos(main.WINDOW_MAIN)
 }
 
-/* Function     : leftMouseButtonReleased
-   Input        : Identifier for the type of object (object_id str)
-                : The used key (key i32)
-                : The action of the key (action  i32)
-   Output       : bool if the left mousebutton was released above the object (released bool)
-   Description  : checks if the active object_id is the same where the left mouse button was released
+/* Function     : mouseAction
+   Input        : Identifier of the object to check (object_id str)
+				: The action to check -> give save-variable of the action to check e.g. mouse_left_click (mouseaction  i32)
+   Description  : checks, if the given action was made above the given object, regardless if the object is a button, switch or slider ..
 */
-func leftMouseButtonReleased(object_id str, key i32,action i32)(released bool){
-	released = false
-	if bool.and(bool.and(i32.eq(key, 0), i32.eq(action, 0)), str.eq(object_id,screenHandler.getActiveButton(screenHandler.current_screen))) {
-		released = true
-	}
-	if bool.and(bool.and(i32.eq(key, 0), i32.eq(action, 0)), str.eq(object_id,screenHandler.getActiveSwitch(screenHandler.current_screen))) {
-		released = true
-	}
-	if bool.and(bool.and(i32.eq(key, 0), i32.eq(action, 0)), str.eq(object_id,screenHandler.getActiveSlider(screenHandler.current_screen))) {
-		released = true
-	}
-}
-
 func mouseAction(object_id str, mouseaction bool)(action bool){
 	action = false
 	if bool.eq(mouseaction,true){
@@ -258,27 +247,12 @@ func mouseAction(object_id str, mouseaction bool)(action bool){
 		}
 	}
 }
-/* Function     : leftMouseButtonStaysPressed
-   Input        : Identifier for the type of object (object_id str)
-                : The used key (key i32)
-                : The action of the key (action  i32)
-   Output       : bool if the left mousebutton is pressed above the object (pressed bool)
-   Description  : checks if the active object_id is the same where the left mouse button is pressed
+
+/* Function     : updateMouseButtons
+   Input        : Identifier of the pressed mouseButton in callback func (key i32)
+				: The action of the mouseButton (action  i32)
+   Description  : updates the states of the mouseButton for one callback -> call this function first in every mouseButton-callback function
 */
-func leftMouseButtonStaysPressed(object_id str, key i32,action i32)(pressed bool){
-	pressed = false
-	if bool.and(bool.and(i32.eq(key, 0), i32.eq(action, 1)), str.eq(object_id,screenHandler.getActiveButton(screenHandler.current_screen))) {
-		pressed = true	
-	}
-	if bool.and(bool.and(i32.eq(key, 0), i32.eq(action, 1)), str.eq(object_id,screenHandler.getActiveSwitch(screenHandler.current_screen))) {
-		pressed = true
-	}
-	if bool.and(bool.and(i32.eq(key, 0), i32.eq(action, 1)), str.eq(object_id,screenHandler.getActiveSlider(screenHandler.current_screen))) {
-		pressed = true
-	}
-}
-
-
 func updateMouseButtons(key i32, action i32)(){
 	//left
 	if bool.and(i32.eq(key, 0), i32.eq(action, 1)){
@@ -301,6 +275,21 @@ func updateMouseButtons(key i32, action i32)(){
 	}
 }
 
+/* Function     : resetStates
+   Description  : resets the saved states of the callback-events -> this function is called in main after the screenHandler.main()
+*/
+func resetStates(){
+	//left
+	mouse_left_click = false
+	mouse_left_release = false
+	//right
+	mouse_right_click = false
+	mouse_right_release = false
+}
+
+/* Function     : checkSwitches
+   Description  : updates the switches of the current_screen -> call this function in every mouseButton-callback function where the screen has got settings
+*/
 func checkSwitches(){
 	for i:=0; i<screenHandler.current_screen.switches_count; i++ {	
 		if mouseAction(screenHandler.current_screen.switches[i].id, mouse_left_release){
@@ -318,13 +307,4 @@ func checkSwitches(){
 func main(){
 	updateMousePosition()
 	actions_with_durations(screenHandler.current_screen)
-}
-
-func resetStates(){
-	//left
-	mouse_left_click = false
-	mouse_left_release = false
-	//right
-	mouse_right_click = false
-	mouse_right_release = false
 }
