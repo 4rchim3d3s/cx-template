@@ -27,7 +27,7 @@ import "inputHandler"
 type Slider struct {
 	slidertype str
 	id str
-	value i32
+	value *i32
 	value_max i32
 	slider_x f32
 	slider_y f32
@@ -59,7 +59,7 @@ type Slider struct {
    Output       : A slider (slider Slider)
    Desctription : Constructor for the Slider struct.
 */
-func newSlider(_id str, _type str, _value i32,_value_max i32, _x f32, _y f32, _width i32, _height i32) (slider Slider) { //FIXME change screenHAndler package when slices work
+func newSlider(_id str, _type str, _value *i32,_value_max i32, _x f32, _y f32, _width i32, _height i32) (slider Slider) { //FIXME change screenHAndler package when slices work
 	var _slider_texture_active i32
 	var _slider_texture_inactive i32
 	var _sliderframe_texture i32
@@ -160,11 +160,11 @@ func renderSlider(slider Slider, screen screenHandler.Screen) () {
    Description  : limits the maximum and minimum Value of the slider
 */
 func limitValue(slider Slider)(slider Slider){
-	if i32.gt(slider.value, slider.value_max){
-		slider.value = slider.value_max
+	if i32.gt(*slider.value, slider.value_max){
+		*slider.value = slider.value_max
 	}
-	if i32.lt(slider.value, 0){
-		slider.value = 0
+	if i32.lt(*slider.value, 0){
+		*slider.value = 0
 	}
 }
 
@@ -214,7 +214,7 @@ func setPositionByValue(slider Slider)(slider Slider){
    Output   	: the relative x_position of the slider to the current_screen size (position_x f32)
    Description  : sets the position of the slider depending on his value
 */
-func getPositionByValue(value i32, value_max i32,slider_width i32, frame_x f32, frame_width i32, screen_width i32)(position_x f32){
+func getPositionByValue(value *i32, value_max i32,slider_width i32, frame_x f32, frame_width i32, screen_width i32)(position_x f32){
 	var frame_x_abs i32
 	var slider_x_abs i32
 	var slider_x_half_width i32
@@ -231,7 +231,7 @@ func getPositionByValue(value i32, value_max i32,slider_width i32, frame_x f32, 
 	min_x_abs = i32.add(i32.sub(frame_x_abs, frame_x_half_width), slider_x_half_width)
 	max_x_abs = i32.sub(i32.add(frame_x_abs, frame_x_half_width), slider_x_half_width)
 	
-	percent = f32.div(i32.f32(value), i32.f32(value_max))
+	percent = f32.div(i32.f32(*value), i32.f32(value_max))
 
 	position_x = screenHandler.absolute2relativeX(i32.add(min_x_abs, f32.i32(f32.mul(percent,i32.f32(i32.sub(max_x_abs, min_x_abs))))), screen_width)
 }
@@ -242,7 +242,7 @@ func getPositionByValue(value i32, value_max i32,slider_width i32, frame_x f32, 
    Description  : sets the value of the slider depending on his position
 */
 func setValueByPosition(slider Slider)(slider Slider){
-	slider.value = getValueByPosition(slider.slider_x, slider.slider_width, slider.value_max, slider.frame_x, slider.frame_width, screenHandler.current_screen.width)
+	*slider.value = getValueByPosition(slider.slider_x, slider.slider_width, slider.value_max, slider.frame_x, slider.frame_width, screenHandler.current_screen.width)
 }
 
 /* Function     : getValueByPosition

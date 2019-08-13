@@ -21,6 +21,7 @@ import "buttonHandler"
 import "textboxHandler"
 import "switchHandler"
 import "sliderHandler"
+import "config"
 
 /***************************************
  * Declaration struct
@@ -28,7 +29,7 @@ import "sliderHandler"
 type Slider struct { // FIXME --> delete when bug #385 fixed
 	slidertype str
 	id str
-	value i32
+	value *i32
 	value_max i32
 	slider_x f32
 	slider_y f32
@@ -177,10 +178,10 @@ func setScreen(screen str) {
 		new_screen = addButtonToScreen(buttonHandler.newButton("BACK", 0.0, -0.8, 270, 100, false), new_screen)
 		new_screen = addSwitchToScreen(switchHandler.newSwitch("TESTSWITCH", "CROSS", 0.0, 0.0, 40, 40, false, false), new_screen)
 		new_screen = addSwitchToScreen(switchHandler.newSwitch("TESTSWITCH2", "CROSS", -0.1, -0.1, 20, 60, false, false), new_screen)
-		new_screen = addSliderToScreen(sliderHandler.newSlider("TESTSLIDER", "CROSS", 50, 100, 0.2, 0.2, 200, 40), new_screen)
-		new_screen = addTextboxToScreen(textboxHandler.newTextbox("TESTSLIDER", 0.35 , 0.25, i32.str(new_screen.sliders[0].value), textboxHandler.TEXTBOX_FONT_SETTING,"black"), new_screen)
-		new_screen = addSliderToScreen(sliderHandler.newSlider("TESTSLIDER2", "CROSS", 20, 1000, 0.3, 0.3, 400, 40), new_screen)
-		new_screen = addTextboxToScreen(textboxHandler.newTextbox("TESTSLIDER2", 0.55 , 0.35, i32.str(new_screen.sliders[0].value), textboxHandler.TEXTBOX_FONT_SETTING,"black"), new_screen)
+		new_screen = addSliderToScreen(sliderHandler.newSlider("TESTSLIDER", "CROSS", &config.SETTINGS_SLIDER_1, 100, 0.2, 0.2, 200, 40), new_screen)
+		new_screen = addTextboxToScreen(textboxHandler.newTextbox("TESTSLIDER", 0.35 , 0.25, i32.str(*getSliderById("TESTSLIDER", new_screen).value), textboxHandler.TEXTBOX_FONT_SETTING,"black"), new_screen)
+		new_screen = addSliderToScreen(sliderHandler.newSlider("TESTSLIDER2", "CROSS", &config.SETTINGS_SLIDER_2, 1000, 0.3, 0.3, 400, 40), new_screen)
+		new_screen = addTextboxToScreen(textboxHandler.newTextbox("TESTSLIDER2", 0.55 , 0.35, i32.str(*getSliderById("TESTSLIDER2", new_screen).value), textboxHandler.TEXTBOX_FONT_SETTING,"black"), new_screen)
 		inputHandler.init(main.WINDOW_MAIN, screen) //initialize the input-callbacks for this screen
 	}
 	current_screen = new_screen
@@ -235,7 +236,7 @@ func updateButtonsState(cursor_x i32, cursor_y i32, screen Screen) (screen Scree
    Output       : the name of the button that is acitve (button_name str)
    Description  : Constructor for the Button struct.
 */
-func getActiveButton(screen Screen) (button_name str) {
+func getActiveButton(screen *Screen) (button_name str) {
 	button_name = "NONE" 													// FIXME add bool to return params
 	for i:=0; i<screen.button_count; i++ {									// FIXME -> button_count to len(slice)
 	  if screen.buttons[i].active {
@@ -295,8 +296,8 @@ func updateTextboxText(textbox_id str, text str)(){
 */
 func updateTextboxes()(){
 	if str.eq(current_screen.name,SCREEN_SETTINGS){
-		updateTextboxText("TESTSLIDER",i32.str(current_screen.sliders[0].value)) //TODO iterate through textboxes until id is found and give then value on this, not by direct accessing .value
-		updateTextboxText("TESTSLIDER2",i32.str(current_screen.sliders[1].value))
+		updateTextboxText("TESTSLIDER",i32.str(*getSliderById("TESTSLIDER", current_screen).value)) //TODO iterate through textboxes until id is found and give then value on this, not by direct accessing .value
+		updateTextboxText("TESTSLIDER2",i32.str(*getSliderById("TESTSLIDER2", current_screen).value))
 	}
 }
 
@@ -333,7 +334,7 @@ func updateSwitchState(cursor_x i32, cursor_y i32, screen Screen) (screen Screen
    Output   	: the identifier for the switch (switch_id str)
    Description  : returns the switch, that is active on the screen
 */
-func getActiveSwitch(screen Screen) (switch_id str) {
+func getActiveSwitch(screen *Screen) (switch_id str) {
 	switch_id = "NONE" 															// FIXME add bool to return params
 	for i:=0; i<screen.switches_count; i++ {
 	  if screen.switches[i].active {
@@ -418,14 +419,10 @@ func updateSliderState(cursor_x i32, cursor_y i32, screen Screen) (screen Screen
 				: the xposition of the mouse (mouse_x f64)
    Description  : updates the sliders position on the same position of the mouse
 */
-func updateSliderPosition(slider sliderHandler.Slider, mouse_x f64){
-	for i:=0; i<current_screen.sliders_count; i++ {								//FIXME -> sliders_count to len(slice)
-		if str.eq(current_screen.sliders[i].id, slider.id){
-			current_screen.sliders[i].slider_x = absolute2relativeX(f64.i32(mouse_x), current_screen.width)
-			current_screen.sliders[i] = sliderHandler.limitPosition(current_screen.sliders[i])
-			current_screen.sliders[i]= sliderHandler.setValueByPosition(current_screen.sliders[i])
-		}
-	}
+func updateSliderPosition(slider sliderHandler.Slider, mouse_x f64)(slider sliderHandler.Slider){
+	slider.slider_x = absolute2relativeX(f64.i32(mouse_x), current_screen.width)
+	slider = sliderHandler.limitPosition(slider)
+	slider = sliderHandler.setValueByPosition(slider)
 }
 
 /* Function     : getActiveSlider
@@ -433,11 +430,23 @@ func updateSliderPosition(slider sliderHandler.Slider, mouse_x f64){
    Output   	: the identifier for the Slider (slider_id str)
    Description  : returns the Slider, that is active on the screen
 */
-func getActiveSlider(screen Screen) (slider_id str) {
+func getActiveSlider(screen *Screen) (slider_id str) {
 	slider_id = "NONE" 															//FIXME add bool to return params
 	for i:=0; i<screen.sliders_count; i++ {										//FIXME -> sliders_count to len(slice)
 	  if screen.sliders[i].active {
 		slider_id = screen.sliders[i].id
+	  }
+	}
+}
+/* Function     : getSliderById
+   Input        : the identifier for the slider (id str)
+   Output   	: the Slider (slider sliderHandler.Slider)
+   Description  : returns the Slider with the given id
+*/
+func getSliderById(id str, screen Screen) (slider sliderHandler.Slider) {
+	for i:=0; i<screen.sliders_count; i++ {										//FIXME -> sliders_count to len(slice)
+	  if str.eq(screen.sliders[i].id, id) {
+		slider = screen.sliders[i]
 	  }
 	}
 }

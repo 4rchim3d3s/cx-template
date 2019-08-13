@@ -1,0 +1,14 @@
+package config
+
+//--> Version Variable for Textbox-testing
+var PROGRAM_VERSION str = "v0.1"
+
+//--> Variables for WindowSize and Caption
+var WINDOW_WIDTH i32 = 1920					//Window-With   pixles
+var WINDOW_HEIGHT i32 = 1000				//Window-Height pixles
+var WINDOW_CAPTION str = "CX TEMPLATE"	//The Window-Caption
+var WINDOW_MAIN str = "window_main"			//The Name of the window to call functions on it
+
+
+var SETTINGS_SLIDER_1 i32 = 20
+var SETTINGS_SLIDER_2 i32 = 50

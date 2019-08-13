@@ -15,6 +15,7 @@ import "glfw"
 /***************************************
  * Import custom modules.
 ***************************************/
+import "config"
 import "inputHandler"
 import "screenHandler"
 import "buttonHandler"
@@ -24,13 +25,13 @@ import "buttonHandler"
 ***************************************/
 
 //--> Version Variable for Textbox-testing
-var PROGRAM_VERSION str = "v0.1"
+var PROGRAM_VERSION str = config.PROGRAM_VERSION
 
 //--> Variables for WindowSize and Caption
-var WINDOW_WIDTH i32 = 1920					//Window-With   pixles
-var WINDOW_HEIGHT i32 = 1000				//Window-Height pixles
-var WINDOW_CAPTION str = "WindowCaption"	//The Window-Caption
-var WINDOW_MAIN str = "window_main"			//The Name of the window to call functions on it
+var WINDOW_WIDTH i32 = config.WINDOW_WIDTH				//Window-With   pixles
+var WINDOW_HEIGHT i32 = config.WINDOW_HEIGHT			//Window-Height pixles
+var WINDOW_CAPTION str = config.WINDOW_CAPTION			//The Window-Caption
+var WINDOW_MAIN str = config.WINDOW_MAIN				//The Name of the window to call functions on it
 
 //--> A Flag to check if the program should be closed
 var EXIT_FLAG bool = false					

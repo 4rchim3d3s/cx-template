@@ -1,0 +1,10 @@
+/***************************************
+ * Mouse-Buttons Variables
+***************************************/
+package inputHandler
+
+var GLFW_MOUSE_BUTTON_LEFT i32 = 0
+
+var GLFW_MOUSE_BUTTON_RIGHT i32 = 1
+
+var GLFW_MOUSE_BUTTON_MIDDLE i32 = 2
